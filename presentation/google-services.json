@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "300939059479",
+    "project_id": "radarisha-c7a32",
+    "storage_bucket": "radarisha-c7a32.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:300939059479:android:77bf8c8738ac4a5add5752",
+        "android_client_info": {
+          "package_name": "com.bucic.radarisha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAL3f5yHFQ35Rx3kwZSO0SQ9w9n5geBacg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
