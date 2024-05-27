@@ -13,8 +13,8 @@ class UserRepositoryImpl(
         remote.createUser(user)
     }
 
-    override suspend fun getUserByUsername(username: String): Result<UserEntity> {
-        TODO("Not yet implemented")
+    override suspend fun getUserByUsername(username: String): Result<UserEntity> = withContext(Dispatchers.IO) {
+        remote.getUserByUsername(username)
     }
 
     override suspend fun saveCurrentUser(user: UserEntity) {
