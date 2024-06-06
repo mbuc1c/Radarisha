@@ -22,8 +22,9 @@ class UserFireStoreImpl @Inject constructor(
             }
     }
 
-    override suspend fun getUserByUsername(username: String): QuerySnapshot = db.collection("users")
+    override suspend fun getUserByUsernameAndPassword(username: String, password: String): QuerySnapshot = db.collection("users")
             .whereEqualTo("username", username)
+            .whereEqualTo("password", password)
             .get()
             .await()
 //            .addOnSuccessListener { documents ->

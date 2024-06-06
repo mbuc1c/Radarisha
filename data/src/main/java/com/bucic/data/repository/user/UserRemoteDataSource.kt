@@ -11,12 +11,13 @@ import com.bucic.domain.util.Result
 class UserRemoteDataSource(
     private val userFireStore: UserFireStore
 ) : UserDataSource.Remote {
+
     override suspend fun createUser(user: UserEntity) {
         userFireStore.createUser(user.toFSData())
     }
 
-    override suspend fun getUserByUsername(username: String): Result<UserEntity> = try {
-        val result = userFireStore.getUserByUsername(username)
+    override suspend fun getUserByUsernameAndPassword(username: String, password: String): Result<UserEntity> = try {
+        val result = userFireStore.getUserByUsernameAndPassword(username, password)
         val user = result.documents[0]
 
         Log.i("customTag", "${user.data}")
@@ -26,6 +27,6 @@ class UserRemoteDataSource(
         ).toDomain(user.id))
     } catch (e: Exception) {
         Log.e("customTag", "Exception: ", e)
-        Result.Error(e.message as String)
+        Result.Error("Wrong username or password!")
     }
 }

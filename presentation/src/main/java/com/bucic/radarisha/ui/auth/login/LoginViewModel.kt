@@ -3,24 +3,28 @@ package com.bucic.radarisha.ui.auth.login
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bucic.domain.usecases.user.GetUserByUsernameUseCase
+import com.bucic.domain.entities.UserEntity
+import com.bucic.domain.usecases.user.GetUserByUsernameAndPasswordUseCase
 import com.bucic.domain.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val getUserByUsername: GetUserByUsernameUseCase
+    private val getUserByUsernameAndPassword: GetUserByUsernameAndPasswordUseCase
 ) : ViewModel() {
 
-    fun getUserByUsername(
-        username: String
+    private val _userResult = MutableStateFlow<Result<UserEntity>?>(null)
+    val userResult: StateFlow<Result<UserEntity>?> = _userResult.asStateFlow()
+
+    fun getUserByUsernameAndPassword(
+        username: String,
+        password: String
     ) = viewModelScope.launch {
-        val result = getUserByUsername.invoke(username)
-        when (result) {
-            is Result.Success -> Log.d("customTag", result.data.toString())
-            else -> Log.e("customTag", "ERROR")
-        }
+        _userResult.value = getUserByUsernameAndPassword.invoke(username, password)
     }
 }

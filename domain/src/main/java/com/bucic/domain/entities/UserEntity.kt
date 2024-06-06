@@ -1,7 +1,8 @@
 package com.bucic.domain.entities
 
 data class UserEntity(
-    val id: String?,
+
+    val uid: String,
     val username: String,
     val password: String,
 )

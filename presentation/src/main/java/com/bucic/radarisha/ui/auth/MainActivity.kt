@@ -9,6 +9,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.setupWithNavController
 import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,11 +31,6 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment_container) as NavHostFragment
         navController = navHostFragment.findNavController()
 
-        setToolbarTitle()
+        binding.topAppBar.setupWithNavController(navController)
     }
-
-    private fun setToolbarTitle() {
-        binding.topAppBar.title = navController.currentDestination?.label
-    }
-
 }

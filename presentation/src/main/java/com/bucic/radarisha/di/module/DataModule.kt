@@ -6,7 +6,7 @@ import com.bucic.data.repository.user.UserRemoteDataSource
 import com.bucic.data.repository.user.UserRepositoryImpl
 import com.bucic.domain.repository.UserRepository
 import com.bucic.domain.usecases.user.CreateUserUseCase
-import com.bucic.domain.usecases.user.GetUserByUsernameUseCase
+import com.bucic.domain.usecases.user.GetUserByUsernameAndPasswordUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -39,7 +39,7 @@ object DataModule {
     }
 
     @Provides
-    fun getUserByUsernameUseCase(userRepository: UserRepository): GetUserByUsernameUseCase {
-        return GetUserByUsernameUseCase(userRepository)
+    fun provideGetUserByUsernameUseCase(userRepository: UserRepository): GetUserByUsernameAndPasswordUseCase {
+        return GetUserByUsernameAndPasswordUseCase(userRepository)
     }
 }

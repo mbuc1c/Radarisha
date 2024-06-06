@@ -1,13 +1,17 @@
 package com.bucic.data.entities.user
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.bucic.domain.entities.UserEntity
 
-data class UserFSData(
+@Entity(tableName = "registered_user")
+data class UserDbData(
+    @PrimaryKey val uid: String,
     val username: String,
     val password: String
 )
 
-fun UserFSData.toDomain(uid: String) = UserEntity(
+fun UserDbData.toDomain() = UserEntity(
     uid = uid,
     username = username,
     password = password
