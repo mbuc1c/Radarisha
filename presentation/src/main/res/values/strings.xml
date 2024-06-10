@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Radarisha</string>
+    <string name="error_username_length">Minimum username length is 2 characters</string>
+    <string name="error_password_length">Minimum password length is 8 characters</string>
+    <string name="error_password_repeat">Passwords do not match</string>
 </resources>
