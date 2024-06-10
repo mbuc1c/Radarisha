@@ -2,6 +2,7 @@ package com.bucic.data.network.firestore
 
 import android.util.Log
 import com.bucic.data.entities.user.UserFSData
+import com.bucic.data.exception.NoResultFoundException
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.toObject
@@ -22,16 +23,14 @@ class UserFireStoreImpl @Inject constructor(
             }
     }
 
-    override suspend fun getUserByUsernameAndPassword(username: String, password: String): QuerySnapshot = db.collection("users")
+    override suspend fun getUserByUsernameAndPassword(username: String, password: String): QuerySnapshot {
+        val result = db.collection("users")
             .whereEqualTo("username", username)
             .whereEqualTo("password", password)
             .get()
             .await()
-//            .addOnSuccessListener { documents ->
-//                for (document in documents) {
-//                    Log.d("customTag", "${document.id} => ${document.data}")
-//                }
-//            }.addOnFailureListener { exception ->
-//                Log.w("customTag", "Error getting documents: ", exception)
-//            }
+        if (result.isEmpty) {
+            throw NoResultFoundException("Invalid username or password!")
+        } else return result
+    }
 }

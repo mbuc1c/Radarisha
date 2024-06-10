@@ -3,6 +3,7 @@ package com.bucic.data.repository.user
 import android.util.Log
 import com.bucic.data.entities.user.UserFSData
 import com.bucic.data.entities.user.toDomain
+import com.bucic.data.exception.NoResultFoundException
 import com.bucic.data.mapper.toFSData
 import com.bucic.data.network.firestore.UserFireStore
 import com.bucic.domain.entities.UserEntity
@@ -25,8 +26,10 @@ class UserRemoteDataSource(
             username = user.data!!["username"].toString(),
             password = user.data!!["password"].toString()
         ).toDomain(user.id))
+    } catch (e: NoResultFoundException) {
+        Result.Error(e.message)
     } catch (e: Exception) {
         Log.e("customTag", "Exception: ", e)
-        Result.Error("Wrong username or password!")
+        Result.Error("Error with fetching user!")
     }
 }

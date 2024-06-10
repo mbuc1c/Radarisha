@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.bucic.domain.entities.UserEntity
 import com.bucic.domain.util.Result
 import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.FragmentLoginBinding
@@ -41,27 +42,36 @@ class LoginFragment : Fragment() {
         }
 
         binding.btnLogin.setOnClickListener {
-            // TODO: add error message on text fields
             viewModel.getUserByUsernameAndPassword(
                 binding.etTextFieldUsername.text.toString(),
                 binding.etTextFieldPassword.text.toString()
             )
+
         }
 
         lifecycleScope.launch {
             viewModel.userResult.collectLatest { result ->
                 when (result) {
-                    is Result.Success -> Log.d("customTag", result.data.toString())
-                    // TODO: remove icon from toast
-                    is Result.Error -> Toast.makeText(
-                        context,
-                        result.message,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    // TODO: see if makes sense
+                    is Result.Success -> {
+                        // TODO: Go to next activity
+                        binding.textFieldUsername.error = null
+                        binding.textFieldPassword.error = null
+                        Log.d("customTag", result.data.toString())
+                        rememberUser(result.data)
+                    }
+                    is Result.Error -> {
+                        binding.textFieldUsername.error = " "
+                        binding.textFieldPassword.error = result.message
+                    }
                     else -> {}
                 }
             }
         }
+    }
+
+    private fun rememberUser(user: UserEntity) {
+        if (binding.cbRememberMe.isChecked) {
+            viewModel.saveCurrentUser(user)
+        } else viewModel.removeCurrentUser()
     }
 }

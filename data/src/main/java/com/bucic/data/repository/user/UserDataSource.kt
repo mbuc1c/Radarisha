@@ -12,6 +12,8 @@ interface UserDataSource {
 
 
     interface Local {
-
+        suspend fun saveCurrentUser(user: UserEntity)
+        suspend fun getCurrentUser(): Result<UserEntity>
+        suspend fun deleteAll()
     }
 }

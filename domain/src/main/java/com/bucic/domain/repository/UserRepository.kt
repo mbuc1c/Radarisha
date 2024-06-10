@@ -11,4 +11,6 @@ interface UserRepository {
     // Local usage
     suspend fun saveCurrentUser(user: UserEntity)
     suspend fun getCurrentUser(): Result<UserEntity>
+
+    suspend fun removeCurrentUser()
 }
