@@ -38,4 +38,8 @@ class LoginViewModel @Inject constructor(
     fun removeCurrentUser() = viewModelScope.launch {
         removeCurrentUserUseCase.invoke()
     }
+
+    fun resetResultStateFlow() {
+        _userResult.value = null
+    }
 }

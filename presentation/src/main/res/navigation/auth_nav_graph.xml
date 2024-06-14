@@ -3,20 +3,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/auth_nav_graph"
-    app:startDestination="@id/loginFragment">
+    app:startDestination="@id/LoginFragment">
 
     <fragment
-        android:id="@+id/registrationFragment"
+        android:id="@+id/RegistrationFragment"
         android:name="com.bucic.radarisha.ui.auth.registration.RegistrationFragment"
         android:label="Registration"
         tools:layout="@layout/fragment_registration" />
     <fragment
-        android:id="@+id/loginFragment"
+        android:id="@+id/LoginFragment"
         android:name="com.bucic.radarisha.ui.auth.login.LoginFragment"
         android:label="Login"
         tools:layout="@layout/fragment_login">
         <action
             android:id="@+id/action_loginFragment_to_registrationFragment"
-            app:destination="@id/registrationFragment" />
+            app:destination="@id/RegistrationFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_radarActivity"
+            app:destination="@id/RadarActivity" />
     </fragment>
+    <activity
+        android:id="@+id/RadarActivity"
+        android:name="com.bucic.radarisha.ui.radar.RadarActivity"
+        android:label="activity_radar"
+        tools:layout="@layout/activity_radar" />
 </navigation>
