@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/MapFragment">
+
+    <fragment
+        android:id="@+id/MapFragment"
+        android:name="com.bucic.radarisha.ui.radar.map.MapFragment"
+        android:label="@string/first_fragment_label"
+        tools:layout="@layout/fragment_map">
+
+        <action
+            android:id="@+id/action_MapFragment_to_RadarCreateFragment"
+            app:destination="@id/RadarCreateFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/RadarCreateFragment"
+        android:name="com.bucic.radarisha.ui.radar.create.RadarCreateFragment"
+        android:label="@string/second_fragment_label"
+        tools:layout="@layout/fragment_radar_create"/>
+</navigation>
