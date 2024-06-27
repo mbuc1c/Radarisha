@@ -40,7 +40,6 @@ class RadarActivity : AppCompatActivity() {
 
         setupMenu()
     }
-    // TODO: fix color change for logout button
     private fun setupMenu() {
         with(binding) {
             topAppBar.setOnMenuItemClickListener { menuItem ->

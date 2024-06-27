@@ -91,4 +91,9 @@ class LoginFragment : Fragment() {
             viewModel.saveCurrentUser(user)
         } else viewModel.removeCurrentUser()
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
 }

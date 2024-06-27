@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.FragmentRegistrationBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,7 +35,7 @@ class RegistrationFragment : Fragment() {
                 val username = binding.etTextFieldUsername.text.toString()
                 val password = binding.etTextFieldPassword.text.toString()
                 viewModel.createUser(username, password)
-                // TODO: navigate further
+                findNavController().navigateUp()
             } else displayErrorMessages()
         }
     }

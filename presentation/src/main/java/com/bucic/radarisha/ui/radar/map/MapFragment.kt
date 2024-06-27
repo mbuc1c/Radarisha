@@ -13,7 +13,6 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MapFragment : Fragment() {
 
-
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
 
