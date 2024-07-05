@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".ui.radar.map.MapFragment">
 
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="0dp"
@@ -18,7 +18,10 @@
         app:layout_constraintTop_toTopOf="parent"
         map:uiZoomGestures="true"
         map:uiRotateGestures="true"
-        map:cameraTilt="30"
+        map:cameraTilt="60"
+        map:cameraZoom="15"
+        map:cameraTargetLat="44.113141"
+        map:cameraTargetLng="15.237000"
         map:mapColorScheme="follow_system" />
 
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
