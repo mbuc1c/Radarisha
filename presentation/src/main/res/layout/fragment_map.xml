@@ -18,7 +18,6 @@
         app:layout_constraintTop_toTopOf="parent"
         map:uiZoomGestures="true"
         map:uiRotateGestures="true"
-        map:cameraTilt="60"
         map:cameraZoom="15"
         map:mapColorScheme="follow_system" />
 

@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.FragmentMapBinding
 import com.google.android.gms.location.*
@@ -24,7 +25,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var mMap: GoogleMap
+    private lateinit var map: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
@@ -40,7 +41,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        // TODO: Make code cleaner
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
@@ -55,17 +56,22 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 }
             }
         }
+
+        binding.extendedFab.setOnClickListener {
+            findNavController().navigate(R.id.action_MapFragment_to_RadarCreateFragment)
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
+        map = googleMap
+        map.isTrafficEnabled = true
         checkLocationPermission()
 
-        mMap.setOnCameraMoveListener {
+        map.setOnCameraMoveListener {
             isTrackingLocation = false
         }
 
-        mMap.setOnMyLocationButtonClickListener {
+        map.setOnMyLocationButtonClickListener {
             isTrackingLocation = true
             getLastKnownLocation()
             true
@@ -92,7 +98,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return
         }
-        mMap.isMyLocationEnabled = true
+        map.isMyLocationEnabled = true
         startLocationUpdates()
     }
 
@@ -122,7 +128,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private fun updateCamera(location: Location) {
         val currentLatLng = LatLng(location.latitude, location.longitude)
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
     }
 
     companion object {
