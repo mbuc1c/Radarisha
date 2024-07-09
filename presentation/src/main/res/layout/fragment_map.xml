@@ -20,8 +20,6 @@
         map:uiRotateGestures="true"
         map:cameraTilt="60"
         map:cameraZoom="15"
-        map:cameraTargetLat="44.113141"
-        map:cameraTargetLng="15.237000"
         map:mapColorScheme="follow_system" />
 
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton

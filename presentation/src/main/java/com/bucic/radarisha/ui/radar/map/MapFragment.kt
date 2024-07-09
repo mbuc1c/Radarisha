@@ -1,114 +1,145 @@
 package com.bucic.radarisha.ui.radar.map
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
 import androidx.core.content.ContextCompat
-import androidx.navigation.fragment.findNavController
+import androidx.fragment.app.Fragment
 import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.FragmentMapBinding
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
-class MapFragment : Fragment(), OnMapReadyCallback,
-    OnRequestPermissionsResultCallback, OnMyLocationButtonClickListener {
+class MapFragment : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
-    private lateinit var map: GoogleMap
+
+    private lateinit var mMap: GoogleMap
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var locationCallback: LocationCallback
+
+    private var isTrackingLocation = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
+    ): View? {
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         return binding.root
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val mapFragment = childFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
+        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        binding.extendedFab.setOnClickListener {
-            findNavController().navigate(R.id.action_MapFragment_to_RadarCreateFragment)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                for (location in locationResult.locations) {
+                    if (isTrackingLocation) {
+                        updateCamera(location)
+                    }
+                }
+            }
         }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        map = googleMap
-        googleMap.setOnMyLocationButtonClickListener(this)
-        enableMyLocation()
-        val unizd = LatLng(44.113141, 15.237000)
-        googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
-        googleMap.addMarker(
-            MarkerOptions()
-                .position(unizd)
-                .title("University of Zadar")
-        )
-        googleMap.isTrafficEnabled = true
-    }
-    @SuppressLint("MissingPermission")
-    private fun enableMyLocation() {
+        mMap = googleMap
+        checkLocationPermission()
 
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            map.isMyLocationEnabled = true
-            return
+        mMap.setOnCameraMoveListener {
+            isTrackingLocation = false
         }
 
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ),
-            LOCATION_PERMISSION_REQUEST_CODE
-        )
+        mMap.setOnMyLocationButtonClickListener {
+            isTrackingLocation = true
+            getLastKnownLocation()
+            true
+        }
+
+        getLastKnownLocation()
     }
 
-    override fun onMyLocationButtonClick(): Boolean {
-        Toast.makeText(requireContext(), "MyLocation button clicked", Toast.LENGTH_SHORT)
-            .show()
-        // Return false so that we don't consume the event and the default behavior still occurs
-        // (the camera animates to the user's current position).
-        return false
+    private fun checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED) {
+            enableMyLocation()
+        } else {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+        }
     }
 
+    private fun enableMyLocation() {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+        mMap.isMyLocationEnabled = true
+        startLocationUpdates()
+    }
+
+    private fun startLocationUpdates() {
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000)
+            .setMinUpdateIntervalMillis(5000)
+            .build()
+
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+    }
+
+    private fun getLastKnownLocation() {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+            location?.let {
+                updateCamera(it)
+            }
+        }
+    }
+
+    private fun updateCamera(location: Location) {
+        val currentLatLng = LatLng(location.latitude, location.longitude)
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
+    }
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-    companion object {
-        /**
-         * Request code for location permission request.
-         *
-         * @see .onRequestPermissionsResult
-         */
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                enableMyLocation()
+            }
+        }
     }
 }
