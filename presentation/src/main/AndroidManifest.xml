@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <application
         android:name=".App"
@@ -15,18 +17,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Radarisha"
         tools:targetApi="31">
-
-<!--        <service-->
-<!--            android:name="com.google.firebase.components.ComponentDiscoveryService"-->
-<!--            android:directBootAware="true"-->
-<!--            android:exported="false">-->
-<!--            <meta-data-->
-<!--                android:name="com.google.firebase.components:com.google.firebase.firestore.FirestoreRegistrar"-->
-<!--                android:value="com.google.firebase.components.ComponentRegistrar" />-->
-<!--        </service>-->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".ui.auth.MainActivity"
+            android:name=".ui.radar.RadarActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Radarisha" />
+        <activity
+            android:name=".ui.auth.AuthActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

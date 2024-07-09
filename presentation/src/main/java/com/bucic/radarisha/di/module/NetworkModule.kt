@@ -16,7 +16,6 @@ import javax.inject.Singleton
 object NetworkModule {
 
     @Provides
-    @Singleton
     fun provideUserFirestoreImpl(
         db: FirebaseFirestore
     ): UserFireStore {
@@ -24,7 +23,6 @@ object NetworkModule {
     }
 
     @Provides
-    @Singleton
     fun provideFirebaseFirestore(): FirebaseFirestore {
         return Firebase.firestore
     }
