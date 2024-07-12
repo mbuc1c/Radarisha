@@ -5,7 +5,7 @@ import com.bucic.data.entities.user.UserFSData
 import com.bucic.data.entities.user.toDomain
 import com.bucic.data.exception.NoResultFoundException
 import com.bucic.data.mapper.toFSData
-import com.bucic.data.network.firestore.UserFireStore
+import com.bucic.data.network.firestore.user.UserFireStore
 import com.bucic.domain.entities.UserEntity
 import com.bucic.domain.util.Result
 

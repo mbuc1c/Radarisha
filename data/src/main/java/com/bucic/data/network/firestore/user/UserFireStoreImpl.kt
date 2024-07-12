@@ -1,11 +1,10 @@
-package com.bucic.data.network.firestore
+package com.bucic.data.network.firestore.user
 
 import android.util.Log
 import com.bucic.data.entities.user.UserFSData
 import com.bucic.data.exception.NoResultFoundException
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
-import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
