@@ -6,9 +6,10 @@ import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.usecases.radar.CreateRadarUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
-class RadarCreateViewModel(
+class RadarCreateViewModel @Inject constructor(
     private val createRadar: CreateRadarUseCase
 ) : ViewModel() {
 
