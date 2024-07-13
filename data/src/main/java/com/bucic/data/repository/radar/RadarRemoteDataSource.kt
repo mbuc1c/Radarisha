@@ -1,5 +1,6 @@
 package com.bucic.data.repository.radar
 
+import android.util.Log
 import com.bucic.data.exception.NoResultFoundException
 import com.bucic.data.mapper.toFSData
 import com.bucic.data.network.firestore.radar.RadarFireStore
@@ -30,6 +31,7 @@ class RadarRemoteDataSource(
                 updatedAt = (it.data!!["updatedAt"] as? Timestamp)?.toDate()
             )
         }
+        Log.d("MyTag", "getAllRadars: $radarList")
         Result.Success(radarList)
     } catch (e: NoResultFoundException) {
         Result.Error(e.message)
