@@ -52,8 +52,8 @@ class RadarCreateFragment : Fragment() {
             ).show()
         }
 
-
-
+        // TODO: get current location address
+//        binding.tvAddress.text = "Address of current location"
     }
 
     override fun onDestroyView() {

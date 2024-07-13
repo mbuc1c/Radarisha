@@ -20,11 +20,13 @@ import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.FragmentMapBinding
 import com.bucic.radarisha.entities.RadarMarker
 import com.bucic.radarisha.mapper.toPresentation
+import com.bucic.radarisha.util.VectorDrawableUtils
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import dagger.hilt.android.AndroidEntryPoint
@@ -77,6 +79,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private suspend fun displayRadars() {
         fetchRadars()
+        // TODO: Make code cleaner
         viewModel.radars.collectLatest { result ->
             when (result) {
                 is Result.Success -> {
@@ -86,10 +89,15 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     for (radar in presentationResult) {
                         when (radar) {
                             is RadarMarker.SpeedCamera -> {
+                                // get bitmap from vector drawable
+                                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, radar.speed.toString())
+
+                                // add marker to map
                                 map.addMarker(
                                     MarkerOptions()
                                         .position(LatLng(radar.lat, radar.lng))
                                         .title("Speed camera: ${radar.speed} km/h")
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
                                 )
                             }
                             is RadarMarker.PoliceCar -> {
