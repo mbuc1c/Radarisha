@@ -59,13 +59,15 @@
 
     <TextView
         android:id="@+id/tvAddress"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
         app:layout_constraintBottom_toBottomOf="@+id/findOnMapButton"
+        app:layout_constraintEnd_toStartOf="@+id/findOnMapButton"
         app:layout_constraintStart_toStartOf="@id/tvLocation"
         app:layout_constraintTop_toTopOf="@+id/findOnMapButton"
-        tools:text="Address of current location" />
+        android:text="Add address" />
 
     <Button
         android:id="@+id/findOnMapButton"
