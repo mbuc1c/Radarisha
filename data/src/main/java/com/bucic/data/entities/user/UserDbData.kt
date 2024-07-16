@@ -8,11 +8,15 @@ import com.bucic.domain.entities.UserEntity
 data class UserDbData(
     @PrimaryKey val uid: String,
     val username: String,
-    val password: String
+    val password: String,
+    val stayLoggedIn: Boolean
 )
 
 fun UserDbData.toDomain() = UserEntity(
     uid = uid,
     username = username,
-    password = password
+    password = password,
+    stayLoggedIn = stayLoggedIn
 )
+
+fun UserDbData.intToBoolean(int: Int): Boolean = int == 1

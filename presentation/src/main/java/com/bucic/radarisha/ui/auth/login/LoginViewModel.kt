@@ -3,6 +3,7 @@ package com.bucic.radarisha.ui.auth.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bucic.domain.entities.UserEntity
+import com.bucic.domain.usecases.user.GetCurrentUserUseCase
 import com.bucic.domain.usecases.user.GetUserByUsernameAndPasswordUseCase
 import com.bucic.domain.usecases.user.RemoveCurrentUserUseCase
 import com.bucic.domain.usecases.user.SaveCurrentUserUseCase
@@ -18,8 +19,12 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val getUserByUsernameAndPasswordUseCase: GetUserByUsernameAndPasswordUseCase,
     private val saveCurrentUserUseCase: SaveCurrentUserUseCase,
-    private val removeCurrentUserUseCase: RemoveCurrentUserUseCase
+    private val removeCurrentUserUseCase: RemoveCurrentUserUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
+
+    private val _currentUser = MutableStateFlow<Result<UserEntity>?>(null)
+    val currentUser: StateFlow<Result<UserEntity>?> = _currentUser.asStateFlow()
 
     private val _userResult = MutableStateFlow<Result<UserEntity>?>(null)
     val userResult: StateFlow<Result<UserEntity>?> = _userResult.asStateFlow()
@@ -31,8 +36,8 @@ class LoginViewModel @Inject constructor(
         _userResult.value = getUserByUsernameAndPasswordUseCase.invoke(username, password)
     }
 
-    fun saveCurrentUser(user: UserEntity) = viewModelScope.launch {
-        saveCurrentUserUseCase.invoke(user)
+    fun saveCurrentUser(user: UserEntity, stayLoggedIn: Boolean) = viewModelScope.launch {
+        saveCurrentUserUseCase.invoke(user, stayLoggedIn)
     }
 
     fun removeCurrentUser() = viewModelScope.launch {
@@ -41,5 +46,9 @@ class LoginViewModel @Inject constructor(
 
     fun resetResultStateFlow() {
         _userResult.value = null
+    }
+
+    fun getCurrentUser() = viewModelScope.launch {
+        _currentUser.value = getCurrentUserUseCase.invoke()
     }
 }

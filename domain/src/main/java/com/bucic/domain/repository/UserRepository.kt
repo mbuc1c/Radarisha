@@ -9,7 +9,7 @@ interface UserRepository {
     suspend fun getUserByUsernameAndPassword(username: String, password: String): Result<UserEntity>
 
     // Local usage
-    suspend fun saveCurrentUser(user: UserEntity)
+    suspend fun saveCurrentUser(user: UserEntity, stayLoggedIn: Boolean)
     suspend fun getCurrentUser(): Result<UserEntity>
 
     suspend fun removeCurrentUser()

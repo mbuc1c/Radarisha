@@ -2,6 +2,7 @@ package com.bucic.radarisha.di.module
 
 import android.content.Context
 import androidx.room.Room
+import com.bucic.data.database.user.MIGRATION_1_2
 import com.bucic.data.database.user.UserDatabase
 import com.bucic.data.database.user.dao.UserDao
 import dagger.Module
@@ -22,7 +23,8 @@ object DatabaseModule {
             context,
             UserDatabase::class.java,
             "user.db"
-        ).build()
+        ).addMigrations(MIGRATION_1_2)
+            .build()
     }
 
 

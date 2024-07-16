@@ -9,17 +9,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bucic.domain.entities.RadarEntity
+import com.bucic.domain.entities.UserEntity
 import com.bucic.domain.util.RadarType
+import com.bucic.domain.util.Result
 import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.FragmentRadarCreateBinding
+import com.bucic.radarisha.ui.radar.RadarViewModel
 import com.bucic.radarisha.ui.radar.address.AddressFinderFragment
 import com.bucic.radarisha.ui.radar.address.AddressFinderFragment.Companion.LOCATION_PERMISSION_REQUEST_CODE
 import com.bucic.radarisha.util.getAddress
@@ -36,6 +39,7 @@ import java.util.Locale
 @AndroidEntryPoint
 class RadarCreateFragment : Fragment() {
 
+    private val activityViewModel: RadarViewModel by activityViewModels()
     private val viewModel: RadarCreateViewModel by viewModels()
     private var _binding: FragmentRadarCreateBinding? = null
     private val binding get() = _binding!!
@@ -154,13 +158,12 @@ class RadarCreateFragment : Fragment() {
         }
     }
 
-    // TODO: add permission
     private fun createRadar() {
         startLifecycleScope {
             viewModel.createRadar(
                 RadarEntity(
                     uid = "Placeholder",
-                    creatorUid = "Placeholder",
+                    creatorUid = activityViewModel.userEntity?.uid ?: "Error with fetching user uid",
                     lat = newRadarLocation.latitude,
                     lng = newRadarLocation.longitude,
                     type = RadarType.entries.find { it.displayName == binding.typeAutoCompleteTextView.text.toString() }!!,

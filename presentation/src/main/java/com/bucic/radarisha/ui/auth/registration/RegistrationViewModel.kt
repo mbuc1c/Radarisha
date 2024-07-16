@@ -21,7 +21,8 @@ class RegistrationViewModel @Inject constructor(
             UserEntity(
                 uid = "Placeholder",
                 username = username,
-                password = password
+                password = password,
+                stayLoggedIn = null
             )
         )
     }

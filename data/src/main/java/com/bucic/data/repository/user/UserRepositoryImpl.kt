@@ -18,8 +18,8 @@ class UserRepositoryImpl(
         remote.getUserByUsernameAndPassword(username, password)
     }
 
-    override suspend fun saveCurrentUser(user: UserEntity) = withContext(Dispatchers.IO) {
-        local.saveCurrentUser(user)
+    override suspend fun saveCurrentUser(user: UserEntity, stayLoggedIn: Boolean) = withContext(Dispatchers.IO) {
+        local.saveCurrentUser(user, stayLoggedIn)
     }
 
     override suspend fun getCurrentUser(): Result<UserEntity> = withContext(Dispatchers.IO) {
