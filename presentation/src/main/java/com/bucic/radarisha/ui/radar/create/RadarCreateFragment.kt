@@ -8,27 +8,24 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bucic.domain.entities.RadarEntity
-import com.bucic.domain.entities.UserEntity
 import com.bucic.domain.util.RadarType
-import com.bucic.domain.util.Result
 import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.FragmentRadarCreateBinding
 import com.bucic.radarisha.ui.radar.RadarViewModel
 import com.bucic.radarisha.ui.radar.address.AddressFinderFragment
-import com.bucic.radarisha.ui.radar.address.AddressFinderFragment.Companion.LOCATION_PERMISSION_REQUEST_CODE
 import com.bucic.radarisha.util.getAddress
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -44,11 +41,13 @@ class RadarCreateFragment : Fragment() {
     private var _binding: FragmentRadarCreateBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var initialConstraint: ConstraintSet
-    private lateinit var newRadarLocation: LatLng
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var geocoder: Geocoder
-    private var locationFetched = false
+    private var createRadarError = false
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -64,21 +63,12 @@ class RadarCreateFragment : Fragment() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         geocoder = Geocoder(requireContext(), Locale.getDefault())
 
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE
-            )
-        } else {
-            if (!locationFetched) {
-                // Fetch location and address only if it hasn't been fetched yet
+        checkPermission {
+            if (!viewModel.currentLocationFetched) {
                 fetchCurrentLocationAndAddress()
-                locationFetched = true // Set flag to true after fetching location
+                viewModel.currentLocationFetched = true
+            } else {
+                updateUIWithViewModelData()
             }
         }
 
@@ -91,9 +81,24 @@ class RadarCreateFragment : Fragment() {
             val latitude = bundle.getDouble(AddressFinderFragment.KEY_LATITUDE)
             val longitude = bundle.getDouble(AddressFinderFragment.KEY_LONGITUDE)
             val address = bundle.getString(AddressFinderFragment.KEY_ADDRESS)
-            newRadarLocation = LatLng(latitude, longitude)
+            viewModel.newRadarLocation = LatLng(latitude, longitude)
+            viewModel.currentAddress = address
             binding.tvAddress.text = address
         }
+    }
+
+    private fun checkPermission(action: () -> Unit) {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+        } else action()
     }
 
     @SuppressLint("MissingPermission")
@@ -101,7 +106,7 @@ class RadarCreateFragment : Fragment() {
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location ->
                 location?.let {
-                    newRadarLocation = LatLng(it.latitude, it.longitude)
+                    viewModel.newRadarLocation = LatLng(it.latitude, it.longitude)
                     updateCurrentLocationUI(it.latitude, it.longitude)
                 }
             }
@@ -113,6 +118,7 @@ class RadarCreateFragment : Fragment() {
             address?.let {
                 withContext(Dispatchers.Main) {
                     binding.tvAddress.text = it.getAddressLine(0)
+                    viewModel.currentAddress = it.getAddressLine(0)
                 }
             }
         }
@@ -123,57 +129,88 @@ class RadarCreateFragment : Fragment() {
     }
 
     private fun setUpUI() {
-        initialConstraint = ConstraintSet()
-        initialConstraint.clone(binding.constraintLayout)
 
-        val radarTypesEnum = RadarType.entries.map { it.displayName }
-        val radarTypeArrayAdapter =
-            ArrayAdapter(requireContext(), R.layout.dropdown_item, radarTypesEnum)
-        binding.typeAutoCompleteTextView.setAdapter(radarTypeArrayAdapter)
+        binding.typeAutoCompleteTextView.setAdapter(viewModel.radarTypeAdapter)
+        binding.speedAutoCompleteTextView.setAdapter(viewModel.speedAdapter)
 
-        val speedValues = resources.getIntArray(R.array.radar_speed)
-        val speedArrayAdapter = ArrayAdapter(
-            requireContext(),
-            R.layout.dropdown_item,
-            speedValues.map { it.toString() })
-        binding.speedAutoCompleteTextView.setAdapter(speedArrayAdapter)
 
         binding.typeAutoCompleteTextView.setOnItemClickListener { parent, _, position, _ ->
             val selectedType = parent.getItemAtPosition(position) as String
+            viewModel.selectedRadarType = selectedType
+            removeErrorForField(binding.menuRadarType)
             if (selectedType != RadarType.SPEED_CAMERA.displayName) {
-                removeMenuSpeedAndMoveLocation()
+                disableMenuSpeed()
             } else {
-                revertToOriginalConstraints()
+                enableMenuSpeed()
             }
+        }
+
+        binding.speedAutoCompleteTextView.setOnItemClickListener { _, _, _, _ ->
+            removeErrorForField(binding.menuSpeed)
         }
 
         binding.createRadarButton.setOnClickListener {
             createRadar()
         }
 
-        removeMenuSpeedAndMoveLocation()
-
         binding.findOnMapButton.setOnClickListener {
             navigateToAddressFinder()
+        }
+
+        updateUIWithViewModelData()
+    }
+
+    private fun updateUIWithViewModelData() {
+        viewModel.selectedRadarType?.let {
+            binding.typeAutoCompleteTextView.setText(it, false)
+        }
+        viewModel.selectedSpeed?.let {
+            binding.speedAutoCompleteTextView.setText(it, false)
+        }
+        viewModel.currentAddress?.let { binding.tvAddress.text = it }
+        if (viewModel.selectedRadarType == RadarType.SPEED_CAMERA.displayName) {
+            enableMenuSpeed()
+        } else {
+            disableMenuSpeed()
         }
     }
 
     private fun createRadar() {
-        startLifecycleScope {
-            viewModel.createRadar(
-                RadarEntity(
-                    uid = "Placeholder",
-                    creatorUid = activityViewModel.userEntity?.uid ?: "Error with fetching user uid",
-                    lat = newRadarLocation.latitude,
-                    lng = newRadarLocation.longitude,
-                    type = RadarType.entries.find { it.displayName == binding.typeAutoCompleteTextView.text.toString() }!!,
-                    speed = getSpeedValue(),
-                    createdAt = Date(),
-                    updatedAt = null
-                )
-            )
+        showErrorForField(binding.menuRadarType, getString(R.string.error_empty_radar_type_field))
+        if (binding.menuSpeed.isVisible) {
+            showErrorForField(binding.menuSpeed, getString(R.string.error_empty_radar_speed_field))
         }
-        findNavController().navigateUp()
+
+        if (!createRadarError) {
+            startLifecycleScope {
+                viewModel.createRadar(
+                    RadarEntity(
+                        uid = "Placeholder",
+                        creatorUid = activityViewModel.userEntity?.uid
+                            ?: "Error with fetching user uid",
+                        lat = viewModel.newRadarLocation?.latitude ?: 0.0,
+                        lng = viewModel.newRadarLocation?.longitude ?: 0.0,
+                        type = RadarType.entries.find { it.displayName == binding.typeAutoCompleteTextView.text.toString() }!!,
+                        speed = getSpeedValue(),
+                        createdAt = Date(),
+                        updatedAt = null
+                    )
+                )
+            }
+            findNavController().navigateUp()
+        }
+    }
+
+    private fun showErrorForField(field: TextInputLayout, message: String) {
+        if (field.editText?.text?.isEmpty() == true) {
+            field.error = message
+            createRadarError = true
+        }
+    }
+
+    private fun removeErrorForField(field: TextInputLayout) {
+        field.error = null
+        createRadarError = false
     }
 
     private fun getSpeedValue(): Int? {
@@ -181,26 +218,19 @@ class RadarCreateFragment : Fragment() {
             null
         } else binding.speedAutoCompleteTextView.text.toString().toInt()
     }
+
     private fun navigateToAddressFinder() {
         findNavController().navigate(R.id.action_RadarCreateFragment_to_AddressFinderFragment)
     }
 
-    private fun revertToOriginalConstraints() {
-        binding.constraintLayout.addView(binding.menuSpeed)
-        initialConstraint.applyTo(binding.constraintLayout)
+    private fun enableMenuSpeed() {
+        binding.menuSpeed.isEnabled = true
+        binding.menuSpeed.visibility = View.VISIBLE
     }
 
-    private fun removeMenuSpeedAndMoveLocation() {
-        with(binding) {
-            constraintLayout.removeView(menuSpeed)
-
-            val constraintSet = ConstraintSet()
-            with(constraintSet) {
-                clone(constraintLayout)
-                connect(tvLocation.id, ConstraintSet.TOP, menuRadarType.id, ConstraintSet.BOTTOM)
-                applyTo(constraintLayout)
-            }
-        }
+    private fun disableMenuSpeed() {
+        binding.menuSpeed.isEnabled = false
+        binding.menuSpeed.visibility = View.GONE
     }
 
     override fun onDestroyView() {
