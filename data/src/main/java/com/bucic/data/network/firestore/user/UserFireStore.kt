@@ -1,4 +1,4 @@
-package com.bucic.data.network.firestore
+package com.bucic.data.network.firestore.user
 
 import com.bucic.data.entities.user.UserFSData
 import com.google.firebase.firestore.QuerySnapshot

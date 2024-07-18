@@ -11,6 +11,7 @@ import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.FragmentRegistrationBinding
 import dagger.hilt.android.AndroidEntryPoint
 
+// TODO: add username already exists error message
 @AndroidEntryPoint
 class RegistrationFragment : Fragment() {
 

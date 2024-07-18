@@ -9,8 +9,9 @@ fun UserEntity.toFSData() = UserFSData(
     password = password
 )
 
-fun UserEntity.toDbData() = UserDbData(
+fun UserEntity.toDbData(stayLoggedIn: Boolean) = UserDbData(
     uid = uid,
     username = username,
-    password = password
+    password = password,
+    stayLoggedIn = stayLoggedIn
 )

@@ -20,7 +20,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-// TODO: which way of navigation from one activity to other is more suitable?
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
 
@@ -53,6 +52,7 @@ class LoginFragment : Fragment() {
             )
 //            findNavController().navigate(R.id.action_loginFragment_to_radarActivity)
         }
+        viewModel.getCurrentUser()
 
         lifecycleScope.launch {
             viewModel.userResult.collectLatest { result ->
@@ -61,14 +61,27 @@ class LoginFragment : Fragment() {
                         binding.textFieldUsername.error = null
                         binding.textFieldPassword.error = null
                         Log.d("customTag", result.data.toString())
-                        rememberUser(result.data)
-//                        findNavController().navigate(R.id.action_loginFragment_to_radarActivity)
+                        rememberUser(result.data, binding.cbRememberMe.isChecked)
                         navigateToRadarActivity()
                     }
                     is Result.Error -> {
                         binding.textFieldUsername.error = " "
                         binding.textFieldPassword.error = result.message
                     }
+                    else -> {}
+                }
+            }
+        }
+
+        // TODO: add this to splash screen
+        lifecycleScope.launch {
+            viewModel.currentUser.collectLatest { result ->
+                when (result) {
+                    is Result.Success -> {
+                        Toast.makeText(requireContext(), "Logged in as ${result.data.username}", Toast.LENGTH_SHORT).show()
+                        navigateToRadarActivity()
+                    }
+                    is Result.Error -> {}
                     else -> {}
                 }
             }
@@ -86,10 +99,8 @@ class LoginFragment : Fragment() {
         Log.d("customTag", "${viewModel.userResult.value}")
     }
 
-    private fun rememberUser(user: UserEntity) {
-        if (binding.cbRememberMe.isChecked) {
-            viewModel.saveCurrentUser(user)
-        } else viewModel.removeCurrentUser()
+    private fun rememberUser(user: UserEntity, stayLoggedIn: Boolean) {
+        viewModel.saveCurrentUser(user, stayLoggedIn)
     }
 
     override fun onDestroy() {

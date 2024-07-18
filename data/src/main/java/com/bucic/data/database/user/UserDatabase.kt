@@ -7,7 +7,7 @@ import com.bucic.data.entities.user.UserDbData
 
 @Database(
     entities = [UserDbData::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class UserDatabase: RoomDatabase() {

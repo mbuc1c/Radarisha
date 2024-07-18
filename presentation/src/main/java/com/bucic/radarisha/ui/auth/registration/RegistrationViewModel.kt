@@ -19,9 +19,10 @@ class RegistrationViewModel @Inject constructor(
     ) = viewModelScope.launch {
         createUser.invoke(
             UserEntity(
-                uid = "Super random uid :)",
+                uid = "Placeholder",
                 username = username,
-                password = password
+                password = password,
+                stayLoggedIn = null
             )
         )
     }

@@ -10,5 +10,6 @@ data class UserFSData(
 fun UserFSData.toDomain(uid: String) = UserEntity(
     uid = uid,
     username = username,
-    password = password
+    password = password,
+    stayLoggedIn = null
 )

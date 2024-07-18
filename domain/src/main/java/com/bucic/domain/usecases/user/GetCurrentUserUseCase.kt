@@ -5,5 +5,5 @@ import com.bucic.domain.repository.UserRepository
 class GetCurrentUserUseCase(
     private val userRepository: UserRepository
 ) {
-    suspend fun invoke() = userRepository.getCurrentUser()
+    suspend operator fun invoke() = userRepository.getCurrentUser()
 }

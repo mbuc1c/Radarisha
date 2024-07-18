@@ -7,21 +7,36 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.bucic.domain.entities.RadarEntity
+import com.bucic.domain.util.Result
 import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.FragmentMapBinding
+import com.bucic.radarisha.entities.RadarMarker
+import com.bucic.radarisha.mapper.toPresentation
+import com.bucic.radarisha.util.VectorDrawableUtils
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class MapFragment : Fragment(), OnMapReadyCallback {
 
+    private val viewModel: MapViewModel by viewModels()
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
 
@@ -62,6 +77,62 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    private suspend fun displayRadars() {
+        fetchRadars()
+        // TODO: Make code cleaner
+        viewModel.radars.collectLatest { result ->
+            when (result) {
+                is Result.Success -> {
+                    val presentationResult: List<RadarMarker> = result.data.mapNotNull { radarEntity ->
+                        radarEntity.toPresentation()
+                    }
+                    for (radar in presentationResult) {
+                        when (radar) {
+                            is RadarMarker.SpeedCamera -> {
+                                // get bitmap from vector drawable
+                                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, radar.speed.toString())
+
+                                // add marker to map
+                                map.addMarker(
+                                    MarkerOptions()
+                                        .position(LatLng(radar.lat, radar.lng))
+                                        .title("Speed camera: ${radar.speed} km/h")
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                                )
+                            }
+                            is RadarMarker.PoliceCar -> {
+                                map.addMarker(
+                                    MarkerOptions()
+                                        .position(LatLng(radar.lat, radar.lng))
+                                        .title("Police car")
+                                )
+                            }
+                            is RadarMarker.CarAccident -> {
+                                map.addMarker(
+                                    MarkerOptions()
+                                        .position(LatLng(radar.lat, radar.lng))
+                                        .title("Car accident")
+                                )
+                            }
+                        }
+                    }
+                }
+                is Result.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                }
+                else -> {}
+            }
+        }
+    }
+
+    private fun startLifecycleScope(action: suspend () -> Unit) {
+        lifecycleScope.launch { action() }
+    }
+
+    private fun fetchRadars() {
+        viewModel.getRadars()
+    }
+
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         map.isTrafficEnabled = true
@@ -77,6 +148,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             true
         }
 
+        startLifecycleScope { displayRadars() }
         getLastKnownLocation()
     }
 

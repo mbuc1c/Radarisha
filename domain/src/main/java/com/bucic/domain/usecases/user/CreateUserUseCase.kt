@@ -6,5 +6,5 @@ import com.bucic.domain.repository.UserRepository
 class CreateUserUseCase(
     private val userRepository: UserRepository
 ) {
-    suspend fun invoke(user: UserEntity) = userRepository.createUser(user)
+    suspend operator fun invoke(user: UserEntity) = userRepository.createUser(user)
 }

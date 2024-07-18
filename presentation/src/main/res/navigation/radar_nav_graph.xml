@@ -19,5 +19,16 @@
         android:id="@+id/RadarCreateFragment"
         android:name="com.bucic.radarisha.ui.radar.create.RadarCreateFragment"
         android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_radar_create"/>
+        tools:layout="@layout/fragment_radar_create">
+
+        <action
+            android:id="@+id/action_RadarCreateFragment_to_AddressFinderFragment"
+            app:destination="@id/AddressFinderFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/AddressFinderFragment"
+        android:name="com.bucic.radarisha.ui.radar.address.AddressFinderFragment"
+        android:label="Draggable Map"
+        tools:layout="@layout/fragment_address_finder" />
 </navigation>
