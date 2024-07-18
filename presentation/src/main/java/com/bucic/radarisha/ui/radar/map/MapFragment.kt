@@ -2,6 +2,7 @@ package com.bucic.radarisha.ui.radar.map
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.location.Location
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -101,17 +102,21 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                                 )
                             }
                             is RadarMarker.PoliceCar -> {
+                                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon)
                                 map.addMarker(
                                     MarkerOptions()
                                         .position(LatLng(radar.lat, radar.lng))
                                         .title("Police car")
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
                                 )
                             }
                             is RadarMarker.CarAccident -> {
+                                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon)
                                 map.addMarker(
                                     MarkerOptions()
                                         .position(LatLng(radar.lat, radar.lng))
                                         .title("Car accident")
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
                                 )
                             }
                         }

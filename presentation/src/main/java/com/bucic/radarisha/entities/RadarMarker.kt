@@ -1,5 +1,6 @@
 package com.bucic.radarisha.entities
 
+import androidx.annotation.DrawableRes
 import com.bucic.radarisha.R
 import java.util.Date
 
@@ -12,7 +13,7 @@ sealed class RadarMarker {
         val speed: Int,
         val createdAt: Date,
         val updatedAt: Date?,
-        val icon: Int = R.drawable.ic_speed_camera
+        @DrawableRes val icon: Int = R.drawable.speed_camera_radar_icon
     ) : RadarMarker()
 
     data class PoliceCar(
@@ -21,7 +22,8 @@ sealed class RadarMarker {
         val lat: Double,
         val lng: Double,
         val createdAt: Date,
-        val updatedAt: Date?
+        val updatedAt: Date?,
+        @DrawableRes val icon: Int = R.drawable.police_car_radar_icon
     ) : RadarMarker()
 
     data class CarAccident(
@@ -30,6 +32,7 @@ sealed class RadarMarker {
         val lat: Double,
         val lng: Double,
         val createdAt: Date,
-        val updatedAt: Date?
+        val updatedAt: Date?,
+        @DrawableRes val icon: Int = R.drawable.car_accident_radar_icon
     ) : RadarMarker()
 }
