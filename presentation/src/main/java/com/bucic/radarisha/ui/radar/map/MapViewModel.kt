@@ -25,8 +25,9 @@ class MapViewModel @Inject constructor(
 
     private val _radars = MutableStateFlow<Result<List<RadarEntity>>?>(null)
     val radars: StateFlow<Result<List<RadarEntity>>?> = _radars.asStateFlow()
-    private val _voteStatusMessage = MutableStateFlow<Result<String>?>(null)
-    val voteStatusMessage: StateFlow<Result<String>?> = _voteStatusMessage.asStateFlow()
+
+    private val _voteStatusMessage = MutableSharedFlow<Result<String>?>(replay = 0)
+    val voteStatusMessage: SharedFlow<Result<String>?> = _voteStatusMessage
 
     // SharedFlow to notify about vote completion
     private val _voteCompleted = MutableSharedFlow<Unit>()
@@ -37,7 +38,8 @@ class MapViewModel @Inject constructor(
     }
 
     fun vote(radarReliabilityVote: RadarReliabilityVoteEntity) = viewModelScope.launch {
-        _voteStatusMessage.value = voteReliability.invoke(radarReliabilityVote)
+        _voteStatusMessage.emit(voteReliability.invoke(radarReliabilityVote))
         _voteCompleted.emit(Unit)
+
     }
 }

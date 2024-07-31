@@ -139,14 +139,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
                     }
                     else -> {}
-
                 }
             }
         }
     }
 
     private fun displayRadars() {
-
         fetchRadars()
         // TODO: Make code cleaner
         startLifecycleScope {
@@ -202,7 +200,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun startLifecycleScope(action: suspend () -> Unit) {
-        lifecycleScope.launch { action() }
+        viewLifecycleOwner.lifecycleScope.launch { action() }
     }
 
     private fun fetchRadars() {
