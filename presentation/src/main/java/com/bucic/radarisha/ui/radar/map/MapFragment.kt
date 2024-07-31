@@ -26,6 +26,7 @@ import com.bucic.radarisha.databinding.FragmentMapBinding
 import com.bucic.radarisha.entities.RadarMarker
 import com.bucic.radarisha.mapper.toPresentation
 import com.bucic.radarisha.ui.radar.RadarViewModel
+import com.bucic.radarisha.util.ReliabilityPresentation
 import com.bucic.radarisha.util.VectorDrawableUtils
 import com.bucic.radarisha.util.getAddress
 import com.google.android.gms.location.*
@@ -157,7 +158,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         for (radar in presentationResult) {
                             when (radar) {
                                 is RadarMarker.SpeedCamera -> {
-                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, radar.speed.toString())
+                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes), radar.speed.toString())
                                     val marker = map.addMarker(
                                         MarkerOptions()
                                             .position(LatLng(radar.lat, radar.lng))
@@ -167,7 +168,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                                     marker?.let { markerMap.put(it, radar) }
                                 }
                                 is RadarMarker.PoliceCar -> {
-                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon)
+                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes))
                                     val marker = map.addMarker(
                                         MarkerOptions()
                                             .position(LatLng(radar.lat, radar.lng))
@@ -178,7 +179,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
                                 }
                                 is RadarMarker.CarAccident -> {
-                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon)
+                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes))
                                     val marker = map.addMarker(
                                         MarkerOptions()
                                             .position(LatLng(radar.lat, radar.lng))
@@ -196,6 +197,14 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     else -> {}
                 }
             }
+        }
+    }
+
+    private fun getReliabilityColor(reliability: ReliabilityPresentation): Int {
+        return when (reliability) {
+            ReliabilityPresentation.RELIABLE -> R.color.green
+            ReliabilityPresentation.UNRELIABLE -> R.color.red
+            ReliabilityPresentation.UNKNOWN -> R.color.orange
         }
     }
 
