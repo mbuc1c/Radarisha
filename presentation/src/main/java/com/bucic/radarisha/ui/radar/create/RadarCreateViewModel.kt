@@ -29,7 +29,7 @@ class RadarCreateViewModel @Inject constructor(
     val speedAdapter: NonFilterArrayAdapter<String>
 
     init {
-        val radarTypesEnum = RadarType.entries.map { it.displayName }
+        val radarTypesEnum = RadarType.entries.map { it.display }
         radarTypeAdapter = NonFilterArrayAdapter(
             application,
             R.layout.dropdown_item,

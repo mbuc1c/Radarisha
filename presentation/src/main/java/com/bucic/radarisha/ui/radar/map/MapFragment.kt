@@ -18,6 +18,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.bucic.domain.entities.RadarReliabilityVoteEntity
 import com.bucic.domain.util.Result
 import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.DialogRadarInfoBinding
@@ -41,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Date
 import java.util.Locale
 
 @AndroidEntryPoint
@@ -62,7 +64,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -89,67 +91,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         binding.extendedFab.setOnClickListener {
             findNavController().navigate(R.id.action_MapFragment_to_RadarCreateFragment)
         }
-    }
 
-    private suspend fun displayRadars() {
-        fetchRadars()
-        // TODO: Make code cleaner
-        viewModel.radars.collectLatest { result ->
-            when (result) {
-                is Result.Success -> {
-                    val presentationResult: List<RadarMarker> = result.data.mapNotNull { radarEntity ->
-                        radarEntity.toPresentation()
-                    }
-                    for (radar in presentationResult) {
-                        when (radar) {
-                            is RadarMarker.SpeedCamera -> {
-                                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, radar.speed.toString())
-                                val marker = map.addMarker(
-                                    MarkerOptions()
-                                        .position(LatLng(radar.lat, radar.lng))
-                                        .title("Speed camera: ${radar.speed} km/h")
-                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
-                                )
-                                marker?.let { markerMap.put(it, radar) }
-                            }
-                            is RadarMarker.PoliceCar -> {
-                                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon)
-                                val marker = map.addMarker(
-                                    MarkerOptions()
-                                        .position(LatLng(radar.lat, radar.lng))
-                                        .title("Police car")
-                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
-                                )
-                                marker?.let { markerMap.put(it, radar) }
-
-                            }
-                            is RadarMarker.CarAccident -> {
-                                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon)
-                                val marker = map.addMarker(
-                                    MarkerOptions()
-                                        .position(LatLng(radar.lat, radar.lng))
-                                        .title("Car accident")
-                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
-                                )
-                                marker?.let { markerMap.put(it, radar) }
-                            }
-                        }
-                    }
-                }
-                is Result.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
-                }
-                else -> {}
-            }
-        }
-    }
-
-    private fun startLifecycleScope(action: suspend () -> Unit) {
-        lifecycleScope.launch { action() }
-    }
-
-    private fun fetchRadars() {
-        viewModel.getRadars()
+        displayVoteStatusMessage()
+        observeVoteCompletion()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -167,20 +111,105 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             true
         }
 
-        startLifecycleScope { displayRadars() }
+        displayRadars()
+
         map.setOnMarkerClickListener { marker ->
-            showVoteDialog(marker)
+            showDialog(marker)
             true
         }
         getLastKnownLocation()
     }
 
-    @SuppressLint("SetTextI18n")
-    private fun showVoteDialog(marker: Marker) {
-//        val dialogFragment = RadarInfoDialogFragment()
-//        dialogFragment.marker = marker
-//        dialogFragment.show(parentFragmentManager, "RadarInfoDialog")
+    private fun observeVoteCompletion() {
+        startLifecycleScope {
+            viewModel.voteCompleted.collect {
+                refreshMap()
+            }
+        }
+    }
 
+    private fun displayVoteStatusMessage() {
+        startLifecycleScope {
+            viewModel.voteStatusMessage.collectLatest { result ->
+                when (result) {
+                    is Result.Success -> {
+                        Toast.makeText(requireContext(), result.data, Toast.LENGTH_SHORT).show()
+                    }
+                    is Result.Error -> {
+                        Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {}
+
+                }
+            }
+        }
+    }
+
+    private fun displayRadars() {
+
+        fetchRadars()
+        // TODO: Make code cleaner
+        startLifecycleScope {
+            viewModel.radars.collectLatest { result ->
+                when (result) {
+                    is Result.Success -> {
+                        val presentationResult: List<RadarMarker> = result.data.mapNotNull { radarEntity ->
+                            radarEntity.toPresentation()
+                        }
+                        for (radar in presentationResult) {
+                            when (radar) {
+                                is RadarMarker.SpeedCamera -> {
+                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, radar.speed.toString())
+                                    val marker = map.addMarker(
+                                        MarkerOptions()
+                                            .position(LatLng(radar.lat, radar.lng))
+                                            .title("Speed camera: ${radar.speed} km/h")
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                                    )
+                                    marker?.let { markerMap.put(it, radar) }
+                                }
+                                is RadarMarker.PoliceCar -> {
+                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon)
+                                    val marker = map.addMarker(
+                                        MarkerOptions()
+                                            .position(LatLng(radar.lat, radar.lng))
+                                            .title("Police car")
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                                    )
+                                    marker?.let { markerMap.put(it, radar) }
+
+                                }
+                                is RadarMarker.CarAccident -> {
+                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon)
+                                    val marker = map.addMarker(
+                                        MarkerOptions()
+                                            .position(LatLng(radar.lat, radar.lng))
+                                            .title("Car accident")
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                                    )
+                                    marker?.let { markerMap.put(it, radar) }
+                                }
+                            }
+                        }
+                    }
+                    is Result.Error -> {
+                        Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    private fun startLifecycleScope(action: suspend () -> Unit) {
+        lifecycleScope.launch { action() }
+    }
+
+    private fun fetchRadars() {
+        viewModel.getRadars()
+    }
+
+    private fun showDialog(marker: Marker) {
         val radarMarker = markerMap[marker]
         if (activityViewModel.isOwner(radarMarker)) {
             createEditDialog(marker)
@@ -191,14 +220,14 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val builder = AlertDialog.Builder(requireContext())
         val dialogBinding = DialogRadarInfoBinding.inflate(layoutInflater)
 
-        displayAddress(dialogBinding, marker)
+        displayDialogInfo(dialogBinding, marker)
 
         builder.setView(dialogBinding.root)
             .setTitle(marker.title)
-            .setPositiveButton(getString(R.string.edit)) { dialog, which ->
+            .setPositiveButton(getString(R.string.edit)) { _, _ ->
                 Toast.makeText(requireContext(), "Edit", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton(getString(R.string.delete)) { dialog, which ->
+            .setNegativeButton(getString(R.string.delete)) { _, _ ->
                 Toast.makeText(requireContext(), "Delete", Toast.LENGTH_SHORT).show()
             }
             .show()
@@ -208,17 +237,54 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val builder = AlertDialog.Builder(requireContext())
         val dialogBinding = DialogRadarInfoBinding.inflate(layoutInflater)
 
-        displayAddress(dialogBinding, marker)
+        displayDialogInfo(dialogBinding, marker)
 
         builder.setView(dialogBinding.root)
             .setTitle(marker.title)
-            .setPositiveButton(getString(R.string.reliable)) { dialog, which ->
-                Toast.makeText(requireContext(), "Reliable", Toast.LENGTH_SHORT).show()
+            .setPositiveButton(getString(R.string.reliable)) { dialog, _ ->
+                viewModel.vote(
+                    RadarReliabilityVoteEntity(
+                        uid = "Placeholder",
+                        radarUid = markerMap[marker]!!.uid,
+                        voterUid = activityViewModel.userEntity!!.uid,
+                        vote = true,
+                        createdAt = Date(),
+                        updatedAt = Date()
+                    )
+                )
+                dialog.dismiss()
             }
-            .setNegativeButton(getString(R.string.unreliable)) { dialog, which ->
-                Toast.makeText(requireContext(), "Unreliable", Toast.LENGTH_SHORT).show()
+            .setNegativeButton(getString(R.string.unreliable)) { dialog, _ ->
+                viewModel.vote(
+                    RadarReliabilityVoteEntity(
+                        uid = "Placeholder",
+                        radarUid = markerMap[marker]!!.uid,
+                        voterUid = activityViewModel.userEntity!!.uid,
+                        vote = false,
+                        createdAt = Date(),
+                        updatedAt = Date()
+                    )
+                )
+                dialog.dismiss()
             }
             .show()
+    }
+
+    private fun refreshMap() {
+        if (::map.isInitialized) {
+            map.clear()
+            displayRadars()
+        }
+    }
+
+    private fun displayDialogInfo(binding: DialogRadarInfoBinding, marker: Marker) {
+        displayAddress(binding, marker)
+        displayReliability(binding, marker)
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun displayReliability(binding: DialogRadarInfoBinding, marker: Marker) {
+        binding.tvReliability.text = "Reliability: ${markerMap[marker]!!.reliabilityVotes.display}"
     }
 
     private fun displayAddress(binding: DialogRadarInfoBinding, marker: Marker) = startLifecycleScope {

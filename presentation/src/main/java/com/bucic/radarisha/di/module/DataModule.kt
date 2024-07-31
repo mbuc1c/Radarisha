@@ -14,6 +14,7 @@ import com.bucic.domain.repository.RadarRepository
 import com.bucic.domain.repository.UserRepository
 import com.bucic.domain.usecases.radar.CreateRadarUseCase
 import com.bucic.domain.usecases.radar.GetRadarsUseCase
+import com.bucic.domain.usecases.radar.VoteReliabilityUseCase
 import com.bucic.domain.usecases.user.CreateUserUseCase
 import com.bucic.domain.usecases.user.GetCurrentUserUseCase
 import com.bucic.domain.usecases.user.GetUserByUsernameAndPasswordUseCase
@@ -108,5 +109,11 @@ object DataModule {
     fun provideGetRadarsUseCase(radarRepository: RadarRepository): GetRadarsUseCase {
         return GetRadarsUseCase(radarRepository)
     }
+
+    @Provides
+    fun provideVoteReliabilityUseCase(radarRepository: RadarRepository): VoteReliabilityUseCase {
+        return VoteReliabilityUseCase(radarRepository)
+    }
+
 
 }

@@ -138,7 +138,7 @@ class RadarCreateFragment : Fragment() {
             val selectedType = parent.getItemAtPosition(position) as String
             viewModel.selectedRadarType = selectedType
             removeErrorForField(binding.menuRadarType)
-            if (selectedType != RadarType.SPEED_CAMERA.displayName) {
+            if (selectedType != RadarType.SPEED_CAMERA.display) {
                 disableMenuSpeed()
             } else {
                 enableMenuSpeed()
@@ -168,7 +168,7 @@ class RadarCreateFragment : Fragment() {
             binding.speedAutoCompleteTextView.setText(it, false)
         }
         viewModel.currentAddress?.let { binding.tvAddress.text = it }
-        if (viewModel.selectedRadarType == RadarType.SPEED_CAMERA.displayName) {
+        if (viewModel.selectedRadarType == RadarType.SPEED_CAMERA.display) {
             enableMenuSpeed()
         } else {
             disableMenuSpeed()
@@ -190,10 +190,11 @@ class RadarCreateFragment : Fragment() {
                             ?: "Error with fetching user uid",
                         lat = viewModel.newRadarLocation?.latitude ?: 0.0,
                         lng = viewModel.newRadarLocation?.longitude ?: 0.0,
-                        type = RadarType.entries.find { it.displayName == binding.typeAutoCompleteTextView.text.toString() }!!,
+                        type = RadarType.entries.find { it.display == binding.typeAutoCompleteTextView.text.toString() }!!,
                         speed = getSpeedValue(),
                         createdAt = Date(),
-                        updatedAt = null
+                        updatedAt = null,
+                        reliabilityVotes = emptyList()
                     )
                 )
             }
@@ -214,7 +215,7 @@ class RadarCreateFragment : Fragment() {
     }
 
     private fun getSpeedValue(): Int? {
-        return if (binding.typeAutoCompleteTextView.text.toString() != RadarType.SPEED_CAMERA.displayName) {
+        return if (binding.typeAutoCompleteTextView.text.toString() != RadarType.SPEED_CAMERA.display) {
             null
         } else binding.speedAutoCompleteTextView.text.toString().toInt()
     }

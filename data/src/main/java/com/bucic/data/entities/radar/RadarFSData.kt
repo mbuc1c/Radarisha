@@ -11,7 +11,8 @@ data class RadarFSData(
     val type: String,
     val speed: Int?,
     val createdAt: Timestamp,
-    val updatedAt: Timestamp?
+    val updatedAt: Timestamp?,
+//    val reliabilityVotes: List<RadarReliabilityVoteFSData>
 )
 
 fun RadarFSData.toDomain(uid: String) = RadarEntity(
@@ -22,5 +23,5 @@ fun RadarFSData.toDomain(uid: String) = RadarEntity(
     type = RadarType.valueOf(type),
     speed = speed,
     createdAt = createdAt.toDate(),
-    updatedAt = updatedAt?.toDate()
+    updatedAt = updatedAt?.toDate(),
 )

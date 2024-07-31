@@ -1,8 +1,10 @@
 package com.bucic.radarisha.mapper
 
 import com.bucic.domain.entities.RadarEntity
+import com.bucic.domain.entities.RadarReliabilityVoteEntity
 import com.bucic.domain.util.RadarType
 import com.bucic.radarisha.entities.RadarMarker
+import com.bucic.radarisha.util.ReliabilityPresentation
 
 fun RadarEntity.toPresentation(): RadarMarker? {
     return when (this.type) {
@@ -15,7 +17,8 @@ fun RadarEntity.toPresentation(): RadarMarker? {
                     lng = lng,
                     speed = it,
                     createdAt = createdAt,
-                    updatedAt = updatedAt
+                    updatedAt = updatedAt,
+                    reliabilityVotes = reliabilityCounter(reliabilityVotes)
                 )
             }
         }
@@ -27,7 +30,8 @@ fun RadarEntity.toPresentation(): RadarMarker? {
                 lat = lat,
                 lng = lng,
                 createdAt = createdAt,
-                updatedAt = updatedAt
+                updatedAt = updatedAt,
+                reliabilityVotes = reliabilityCounter(reliabilityVotes)
             )
         }
 
@@ -38,9 +42,22 @@ fun RadarEntity.toPresentation(): RadarMarker? {
                 lat = lat,
                 lng = lng,
                 createdAt = createdAt,
-                updatedAt = updatedAt
+                updatedAt = updatedAt,
+                reliabilityVotes = reliabilityCounter(reliabilityVotes)
             )
         }
         else -> null
+    }
+}
+
+private fun reliabilityCounter(reliabilityVotes: List<RadarReliabilityVoteEntity>): ReliabilityPresentation {
+    var iterator = 0
+    for (vote in reliabilityVotes) {
+        if (vote.vote) iterator++ else iterator--
+    }
+    return when {
+        iterator > 0 -> ReliabilityPresentation.RELIABLE
+        iterator < 0 -> ReliabilityPresentation.UNRELIABLE
+        else -> ReliabilityPresentation.UNKNOWN
     }
 }
