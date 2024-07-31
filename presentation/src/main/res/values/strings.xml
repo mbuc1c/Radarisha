@@ -15,4 +15,8 @@
     <!-- Error messages-->
     <string name="error_empty_radar_type_field">Pick radar type</string>
     <string name="error_empty_radar_speed_field">Pick radar speed</string>
+    <string name="reliable">Reliable</string>
+    <string name="unreliable">Unreliable</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
 </resources>

@@ -1,11 +1,13 @@
 package com.bucic.radarisha.ui.radar
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bucic.domain.entities.UserEntity
 import com.bucic.domain.usecases.user.GetCurrentUserUseCase
 import com.bucic.domain.usecases.user.RemoveCurrentUserUseCase
 import com.bucic.domain.util.Result
+import com.bucic.radarisha.entities.RadarMarker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +30,20 @@ class RadarViewModel @Inject constructor(
 
     fun removeCurrentUser() = viewModelScope.launch {
         removeCurrentUserUseCase.invoke()
+    }
+
+    fun isOwner(radarMarker: RadarMarker?): Boolean = try {
+        var creatorUid: String? = null
+        when (radarMarker) {
+            is RadarMarker.SpeedCamera -> creatorUid = radarMarker.creatorUid
+            is RadarMarker.CarAccident -> creatorUid = radarMarker.creatorUid
+            is RadarMarker.PoliceCar -> creatorUid = radarMarker.creatorUid
+            null -> {}
+        }
+        (currentUser.value as Result.Success).data.uid == creatorUid
+    } catch (e: Exception) {
+        Log.e("RadarViewModel", "isOwner: ", e)
+        false
     }
 
     val userEntity: UserEntity?

@@ -1,6 +1,8 @@
 package com.bucic.data.repository.radar
 
 import com.bucic.domain.entities.RadarEntity
+import com.bucic.domain.entities.RadarReliabilityVoteEntity
+import com.bucic.domain.entities.UserEntity
 import com.bucic.domain.repository.RadarRepository
 import com.bucic.domain.util.Result
 import kotlinx.coroutines.Dispatchers
@@ -26,4 +28,7 @@ class RadarRepositoryImpl(
         TODO("Not yet implemented")
     }
 
+    override suspend fun vote(radarReliabilityVote: RadarReliabilityVoteEntity): Result<String> = withContext(Dispatchers.IO) {
+        remote.vote(radarReliabilityVote)
+    }
 }

@@ -11,7 +11,8 @@ data class RadarEntity(
     val type: RadarType,
     val speed: Int?,
     val createdAt: Date,
-    val updatedAt: Date?
+    val updatedAt: Date?,
+    val reliabilityVotes: List<RadarReliabilityVoteEntity> = emptyList()
 )
 
 data class RadarReliabilityVoteEntity(

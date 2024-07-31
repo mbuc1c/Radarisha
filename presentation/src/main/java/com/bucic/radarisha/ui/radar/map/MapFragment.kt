@@ -1,7 +1,10 @@
 package com.bucic.radarisha.ui.radar.map
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,16 +14,21 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.bucic.domain.entities.RadarEntity
+import com.bucic.domain.entities.RadarReliabilityVoteEntity
 import com.bucic.domain.util.Result
 import com.bucic.radarisha.R
+import com.bucic.radarisha.databinding.DialogRadarInfoBinding
 import com.bucic.radarisha.databinding.FragmentMapBinding
 import com.bucic.radarisha.entities.RadarMarker
 import com.bucic.radarisha.mapper.toPresentation
+import com.bucic.radarisha.ui.radar.RadarViewModel
+import com.bucic.radarisha.util.ReliabilityPresentation
 import com.bucic.radarisha.util.VectorDrawableUtils
+import com.bucic.radarisha.util.getAddress
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -28,28 +36,36 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Date
+import java.util.Locale
 
 @AndroidEntryPoint
 class MapFragment : Fragment(), OnMapReadyCallback {
 
+    private val activityViewModel: RadarViewModel by activityViewModels()
     private val viewModel: MapViewModel by viewModels()
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var map: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var geocoder: Geocoder
     private lateinit var locationCallback: LocationCallback
+    private val markerMap = mutableMapOf<Marker, RadarMarker>()
 
     private var isTrackingLocation = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -61,6 +77,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        geocoder = Geocoder(requireContext(), Locale.getDefault())
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
@@ -75,62 +92,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         binding.extendedFab.setOnClickListener {
             findNavController().navigate(R.id.action_MapFragment_to_RadarCreateFragment)
         }
-    }
 
-    private suspend fun displayRadars() {
-        fetchRadars()
-        // TODO: Make code cleaner
-        viewModel.radars.collectLatest { result ->
-            when (result) {
-                is Result.Success -> {
-                    val presentationResult: List<RadarMarker> = result.data.mapNotNull { radarEntity ->
-                        radarEntity.toPresentation()
-                    }
-                    for (radar in presentationResult) {
-                        when (radar) {
-                            is RadarMarker.SpeedCamera -> {
-                                // get bitmap from vector drawable
-                                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, radar.speed.toString())
-
-                                // add marker to map
-                                map.addMarker(
-                                    MarkerOptions()
-                                        .position(LatLng(radar.lat, radar.lng))
-                                        .title("Speed camera: ${radar.speed} km/h")
-                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
-                                )
-                            }
-                            is RadarMarker.PoliceCar -> {
-                                map.addMarker(
-                                    MarkerOptions()
-                                        .position(LatLng(radar.lat, radar.lng))
-                                        .title("Police car")
-                                )
-                            }
-                            is RadarMarker.CarAccident -> {
-                                map.addMarker(
-                                    MarkerOptions()
-                                        .position(LatLng(radar.lat, radar.lng))
-                                        .title("Car accident")
-                                )
-                            }
-                        }
-                    }
-                }
-                is Result.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
-                }
-                else -> {}
-            }
-        }
-    }
-
-    private fun startLifecycleScope(action: suspend () -> Unit) {
-        lifecycleScope.launch { action() }
-    }
-
-    private fun fetchRadars() {
-        viewModel.getRadars()
+        displayVoteStatusMessage()
+        observeVoteCompletion()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -148,8 +112,195 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             true
         }
 
-        startLifecycleScope { displayRadars() }
+        displayRadars()
+
+        map.setOnMarkerClickListener { marker ->
+            showDialog(marker)
+            true
+        }
         getLastKnownLocation()
+    }
+
+    private fun observeVoteCompletion() {
+        startLifecycleScope {
+            viewModel.voteCompleted.collect {
+                refreshMap()
+            }
+        }
+    }
+
+    private fun displayVoteStatusMessage() {
+        startLifecycleScope {
+            viewModel.voteStatusMessage.collectLatest { result ->
+                when (result) {
+                    is Result.Success -> {
+                        Toast.makeText(requireContext(), result.data, Toast.LENGTH_SHORT).show()
+                    }
+                    is Result.Error -> {
+                        Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    private fun displayRadars() {
+        fetchRadars()
+        // TODO: Make code cleaner
+        startLifecycleScope {
+            viewModel.radars.collectLatest { result ->
+                when (result) {
+                    is Result.Success -> {
+                        val presentationResult: List<RadarMarker> = result.data.mapNotNull { radarEntity ->
+                            radarEntity.toPresentation()
+                        }
+                        for (radar in presentationResult) {
+                            when (radar) {
+                                is RadarMarker.SpeedCamera -> {
+                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes), radar.speed.toString())
+                                    val marker = map.addMarker(
+                                        MarkerOptions()
+                                            .position(LatLng(radar.lat, radar.lng))
+                                            .title("Speed camera: ${radar.speed} km/h")
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                                    )
+                                    marker?.let { markerMap.put(it, radar) }
+                                }
+                                is RadarMarker.PoliceCar -> {
+                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes))
+                                    val marker = map.addMarker(
+                                        MarkerOptions()
+                                            .position(LatLng(radar.lat, radar.lng))
+                                            .title("Police car")
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                                    )
+                                    marker?.let { markerMap.put(it, radar) }
+
+                                }
+                                is RadarMarker.CarAccident -> {
+                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes))
+                                    val marker = map.addMarker(
+                                        MarkerOptions()
+                                            .position(LatLng(radar.lat, radar.lng))
+                                            .title("Car accident")
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                                    )
+                                    marker?.let { markerMap.put(it, radar) }
+                                }
+                            }
+                        }
+                    }
+                    is Result.Error -> {
+                        Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    private fun getReliabilityColor(reliability: ReliabilityPresentation): Int {
+        return when (reliability) {
+            ReliabilityPresentation.RELIABLE -> R.color.green
+            ReliabilityPresentation.UNRELIABLE -> R.color.red
+            ReliabilityPresentation.UNKNOWN -> R.color.orange
+        }
+    }
+
+    private fun startLifecycleScope(action: suspend () -> Unit) {
+        viewLifecycleOwner.lifecycleScope.launch { action() }
+    }
+
+    private fun fetchRadars() {
+        viewModel.getRadars()
+    }
+
+    private fun showDialog(marker: Marker) {
+        val radarMarker = markerMap[marker]
+        if (activityViewModel.isOwner(radarMarker)) {
+            createEditDialog(marker)
+        } else createVoteDialog(marker)
+    }
+    // TODO: Modify clicks
+    private fun createEditDialog(marker: Marker) {
+        val builder = AlertDialog.Builder(requireContext())
+        val dialogBinding = DialogRadarInfoBinding.inflate(layoutInflater)
+
+        displayDialogInfo(dialogBinding, marker)
+
+        builder.setView(dialogBinding.root)
+            .setTitle(marker.title)
+            .setPositiveButton(getString(R.string.edit)) { _, _ ->
+                Toast.makeText(requireContext(), "Edit", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(getString(R.string.delete)) { _, _ ->
+                Toast.makeText(requireContext(), "Delete", Toast.LENGTH_SHORT).show()
+            }
+            .show()
+    }
+
+    private fun createVoteDialog(marker: Marker) {
+        val builder = AlertDialog.Builder(requireContext())
+        val dialogBinding = DialogRadarInfoBinding.inflate(layoutInflater)
+
+        displayDialogInfo(dialogBinding, marker)
+
+        builder.setView(dialogBinding.root)
+            .setTitle(marker.title)
+            .setPositiveButton(getString(R.string.reliable)) { dialog, _ ->
+                viewModel.vote(
+                    RadarReliabilityVoteEntity(
+                        uid = "Placeholder",
+                        radarUid = markerMap[marker]!!.uid,
+                        voterUid = activityViewModel.userEntity!!.uid,
+                        vote = true,
+                        createdAt = Date(),
+                        updatedAt = Date()
+                    )
+                )
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.unreliable)) { dialog, _ ->
+                viewModel.vote(
+                    RadarReliabilityVoteEntity(
+                        uid = "Placeholder",
+                        radarUid = markerMap[marker]!!.uid,
+                        voterUid = activityViewModel.userEntity!!.uid,
+                        vote = false,
+                        createdAt = Date(),
+                        updatedAt = Date()
+                    )
+                )
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun refreshMap() {
+        if (::map.isInitialized) {
+            map.clear()
+            displayRadars()
+        }
+    }
+
+    private fun displayDialogInfo(binding: DialogRadarInfoBinding, marker: Marker) {
+        displayAddress(binding, marker)
+        displayReliability(binding, marker)
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun displayReliability(binding: DialogRadarInfoBinding, marker: Marker) {
+        binding.tvReliability.text = "Reliability: ${markerMap[marker]!!.reliabilityVotes.display}"
+    }
+
+    private fun displayAddress(binding: DialogRadarInfoBinding, marker: Marker) = startLifecycleScope {
+        val address = geocoder.getAddress(marker.position.latitude, marker.position.longitude)
+        address?.let {
+            withContext(Dispatchers.Main) {
+                binding.tvAddress.text = it.getAddressLine(0)
+            }
+        }
     }
 
     private fun checkLocationPermission() {
