@@ -10,6 +10,7 @@ import com.bucic.data.repository.user.UserDataSource
 import com.bucic.data.repository.user.UserLocalDataSource
 import com.bucic.data.repository.user.UserRemoteDataSource
 import com.bucic.data.repository.user.UserRepositoryImpl
+import com.bucic.data.util.NetworkConnectivityChecker
 import com.bucic.domain.repository.RadarRepository
 import com.bucic.domain.repository.UserRepository
 import com.bucic.domain.usecases.radar.CreateRadarUseCase
@@ -95,9 +96,10 @@ object DataModule {
     @Provides
     @Singleton
     fun provideRadarRemoteDataSource(
-        radarFireStore: RadarFireStore
+        radarFireStore: RadarFireStore,
+        networkConnectivityChecker: NetworkConnectivityChecker
     ): RadarDataSource.Remote {
-        return RadarRemoteDataSource(radarFireStore)
+        return RadarRemoteDataSource(radarFireStore, networkConnectivityChecker)
     }
 
     @Provides

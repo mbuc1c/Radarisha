@@ -8,7 +8,7 @@ import com.bucic.domain.util.Result
 interface RadarDataSource {
 
     interface Remote {
-        suspend fun addRadar(radar: RadarEntity)
+        suspend fun addRadar(radar: RadarEntity): Result<String>
         suspend fun getAllRadars(): Result<List<RadarEntity>>
 
         suspend fun vote(radarReliabilityVote: RadarReliabilityVoteEntity): Result<String>

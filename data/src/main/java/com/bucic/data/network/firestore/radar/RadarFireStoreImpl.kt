@@ -28,7 +28,6 @@ class RadarFireStoreImpl @Inject constructor(
             throw NoResultFoundException("No radars found")
         } else return result
     }
-// TODO: change from domain entity to data entity
     override fun vote(radarReliabilityVote: RadarReliabilityVoteFSData, radarUid: String) {
         val radarRef = db.collection("radars").document(radarUid)
         val voteSubcollectionRef = radarRef.collection("reliability")

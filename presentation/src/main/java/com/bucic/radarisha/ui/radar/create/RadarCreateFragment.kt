@@ -4,10 +4,12 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -17,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.util.RadarType
+import com.bucic.domain.util.Result
 import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.FragmentRadarCreateBinding
 import com.bucic.radarisha.ui.radar.RadarViewModel
@@ -28,6 +31,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
@@ -85,6 +90,27 @@ class RadarCreateFragment : Fragment() {
             viewModel.currentAddress = address
             binding.tvAddress.text = address
         }
+
+        displayCreateRadarStatusMessage()
+    }
+
+    private fun displayCreateRadarStatusMessage() {
+        startLifecycleScope {
+            viewModel.createRadarStatusMessage.collectLatest { result ->
+                when (result) {
+                    is Result.Success -> {
+                        Toast.makeText(requireContext(), result.data, Toast.LENGTH_SHORT).show()
+                        findNavController().navigateUp()
+                    }
+
+                    is Result.Error -> {
+                        Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    }
+
+                    else -> {}
+                }
+            }
+        }
     }
 
     private fun checkPermission(action: () -> Unit) {
@@ -125,7 +151,7 @@ class RadarCreateFragment : Fragment() {
     }
 
     private fun startLifecycleScope(action: suspend () -> Unit) {
-        lifecycleScope.launch { action() }
+        viewLifecycleOwner.lifecycleScope.launch { action() }
     }
 
     private fun setUpUI() {
@@ -176,6 +202,7 @@ class RadarCreateFragment : Fragment() {
     }
 
     private fun createRadar() {
+        Log.d("MyTag", "createRadar started")
         showErrorForField(binding.menuRadarType, getString(R.string.error_empty_radar_type_field))
         if (binding.menuSpeed.isVisible) {
             showErrorForField(binding.menuSpeed, getString(R.string.error_empty_radar_speed_field))
@@ -198,7 +225,6 @@ class RadarCreateFragment : Fragment() {
                     )
                 )
             }
-            findNavController().navigateUp()
         }
     }
 
