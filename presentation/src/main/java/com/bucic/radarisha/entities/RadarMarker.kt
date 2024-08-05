@@ -1,7 +1,9 @@
 package com.bucic.radarisha.entities
 
 import androidx.annotation.DrawableRes
+import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.entities.RadarReliabilityVoteEntity
+import com.bucic.domain.util.RadarType
 import com.bucic.radarisha.R
 import com.bucic.radarisha.util.ReliabilityPresentation
 import java.util.Date
@@ -49,4 +51,39 @@ sealed class RadarMarker(
         override val reliabilityVotes: ReliabilityPresentation,
         @DrawableRes override val icon: Int = R.drawable.car_accident_radar_icon
     ) : RadarMarker(uid, creatorUid, lat, lng, createdAt, updatedAt, reliabilityVotes, icon)
+}
+
+fun RadarMarker.toDomain(): RadarEntity {
+    return when (this) {
+        is RadarMarker.SpeedCamera -> RadarEntity(
+            uid = uid,
+            creatorUid = creatorUid,
+            lat = lat,
+            lng = lng,
+            type = RadarType.SPEED_CAMERA,
+            speed = speed,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+        )
+        is RadarMarker.PoliceCar -> RadarEntity(
+            uid = uid,
+            creatorUid = creatorUid,
+            lat = lat,
+            lng = lng,
+            type = RadarType.POLICE_CAR,
+            speed = null,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+        )
+        is RadarMarker.CarAccident -> RadarEntity(
+            uid = uid,
+            creatorUid = creatorUid,
+            lat = lat,
+            lng = lng,
+            type = RadarType.CAR_ACCIDENT,
+            speed = null,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+        )
+    }
 }

@@ -28,6 +28,27 @@ class RadarFireStoreImpl @Inject constructor(
             throw NoResultFoundException("No radars found")
         } else return result
     }
+
+    override suspend fun deleteRadar(radarUid: String) {
+        db.collection("radars")
+            .document(radarUid)
+            .delete()
+    }
+
+    override suspend fun updateRadar(radar: RadarFSData, radarUid: String) {
+        db.collection("radars")
+            .document(radarUid)
+            .update(
+                mapOf(
+                    "lat" to radar.lat,
+                    "lng" to radar.lng,
+                    "type" to radar.type,
+                    "speed" to radar.speed,
+                    "updatedAt" to radar.updatedAt
+                )
+            )
+    }
+
     override fun vote(radarReliabilityVote: RadarReliabilityVoteFSData, radarUid: String) {
         val radarRef = db.collection("radars").document(radarUid)
         val voteSubcollectionRef = radarRef.collection("reliability")

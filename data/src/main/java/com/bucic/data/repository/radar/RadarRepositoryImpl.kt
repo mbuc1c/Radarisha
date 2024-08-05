@@ -20,12 +20,12 @@ class RadarRepositoryImpl(
         remote.getAllRadars()
     }
 
-    override suspend fun deleteRadar(radar: RadarEntity): Result<String> {
-        TODO("Not yet implemented")
+    override suspend fun deleteRadar(radar: RadarEntity): Result<String> = withContext(Dispatchers.IO) {
+        remote.deleteRadar(radar)
     }
 
-    override suspend fun updateRadar(radar: RadarEntity): Result<String> {
-        TODO("Not yet implemented")
+    override suspend fun updateRadar(radar: RadarEntity): Result<String> = withContext(Dispatchers.IO) {
+        remote.updateRadar(radar)
     }
 
     override suspend fun sync(): Boolean {

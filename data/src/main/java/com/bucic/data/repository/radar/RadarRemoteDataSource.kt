@@ -20,8 +20,12 @@ class RadarRemoteDataSource(
 
     override suspend fun addRadar(radar: RadarEntity): Result<String> {
         return if (networkConnectivityChecker.isNetworkAvailable()) {
-            radarFireStore.addRadar(radar.toFSData())
-            Result.Success("Radar added successfully")
+            try {
+                radarFireStore.addRadar(radar.toFSData())
+                Result.Success("Radar added successfully")
+            } catch (e: Exception) {
+                Result.Error(e.message.toString())
+            }
         } else {
             Result.Error("No internet connection.")
         }
@@ -48,6 +52,28 @@ class RadarRemoteDataSource(
                 Result.Error(e.message.toString())
             }
         } else return Result.Error("Couldn't fetch new radars.\nNo internet connection.")
+    }
+
+    override suspend fun deleteRadar(radar: RadarEntity): Result<String> {
+        return if (networkConnectivityChecker.isNetworkAvailable()) {
+            try {
+                radarFireStore.deleteRadar(radar.uid)
+                Result.Success("Radar deleted successfully")
+            } catch (e: Exception) {
+                Result.Error(e.message.toString())
+            }
+        } else Result.Error("No internet connection.")
+    }
+
+    override suspend fun updateRadar(radar: RadarEntity): Result<String> {
+        return if (networkConnectivityChecker.isNetworkAvailable()) {
+            try {
+                radarFireStore.updateRadar(radar.toFSData(), radar.uid)
+                Result.Success("Radar updated successfully")
+            } catch (e: Exception) {
+                Result.Error(e.message.toString())
+            }
+        } else Result.Error("No internet connection.")
     }
 
     override suspend fun vote(radarReliabilityVote: RadarReliabilityVoteEntity): Result<String> {

@@ -14,7 +14,9 @@ import com.bucic.data.util.NetworkConnectivityChecker
 import com.bucic.domain.repository.RadarRepository
 import com.bucic.domain.repository.UserRepository
 import com.bucic.domain.usecases.radar.CreateRadarUseCase
+import com.bucic.domain.usecases.radar.DeleteRadarUseCase
 import com.bucic.domain.usecases.radar.GetRadarsUseCase
+import com.bucic.domain.usecases.radar.UpdateRadarUseCase
 import com.bucic.domain.usecases.radar.VoteReliabilityUseCase
 import com.bucic.domain.usecases.user.CreateUserUseCase
 import com.bucic.domain.usecases.user.GetCurrentUserUseCase
@@ -113,9 +115,17 @@ object DataModule {
     }
 
     @Provides
+    fun provideDeleteRadarUseCase(radarRepository: RadarRepository): DeleteRadarUseCase {
+        return DeleteRadarUseCase(radarRepository)
+    }
+
+    @Provides
+    fun provideUpdateRadarUseCase(radarRepository: RadarRepository): UpdateRadarUseCase {
+        return UpdateRadarUseCase(radarRepository)
+    }
+
+    @Provides
     fun provideVoteReliabilityUseCase(radarRepository: RadarRepository): VoteReliabilityUseCase {
         return VoteReliabilityUseCase(radarRepository)
     }
-
-
 }

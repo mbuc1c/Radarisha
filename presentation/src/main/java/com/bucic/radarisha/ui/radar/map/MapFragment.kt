@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +25,7 @@ import com.bucic.radarisha.R
 import com.bucic.radarisha.databinding.DialogRadarInfoBinding
 import com.bucic.radarisha.databinding.FragmentMapBinding
 import com.bucic.radarisha.entities.RadarMarker
+import com.bucic.radarisha.entities.toDomain
 import com.bucic.radarisha.mapper.toPresentation
 import com.bucic.radarisha.ui.radar.RadarViewModel
 import com.bucic.radarisha.util.ReliabilityPresentation
@@ -72,7 +74,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO: Make code cleaner
+        Log.d("MyTag", "onViewCreated: MapFragment")
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
@@ -98,6 +100,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
+        Log.d("MyTag", "onMapReady: Map is ready")
         map = googleMap
         map.isTrafficEnabled = true
         checkLocationPermission()
@@ -122,8 +125,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun observeVoteCompletion() {
+        Log.d("MyTag", "observeVoteCompletion: Observing vote completion")
         startLifecycleScope {
             viewModel.voteCompleted.collect {
+                Log.d("MyTag", "observeVoteCompletion: Vote completed")
                 refreshMap()
             }
         }
@@ -146,6 +151,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun displayRadars() {
+        markerMap.clear()
         fetchRadars()
         // TODO: Make code cleaner
         startLifecycleScope {
@@ -234,8 +240,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             .setPositiveButton(getString(R.string.edit)) { _, _ ->
                 Toast.makeText(requireContext(), "Edit", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton(getString(R.string.delete)) { _, _ ->
-                Toast.makeText(requireContext(), "Delete", Toast.LENGTH_SHORT).show()
+            .setNegativeButton(getString(R.string.delete)) { dialog, _ ->
+                viewModel.deleteRadar(markerMap[marker]!!.toDomain())
+                marker.remove()
+                dialog.dismiss()
             }
             .show()
     }
@@ -278,7 +286,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun refreshMap() {
+        Log.d("MyTag", "refreshMap: starting refresh map")
         if (::map.isInitialized) {
+            Log.d("MyTag", "refreshMap: refreshing map")
             map.clear()
             displayRadars()
         }

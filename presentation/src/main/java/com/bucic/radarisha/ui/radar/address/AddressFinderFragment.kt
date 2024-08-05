@@ -25,7 +25,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-// TODO: prekrsti
 @AndroidEntryPoint
 class AddressFinderFragment : Fragment(), OnMapReadyCallback {
 

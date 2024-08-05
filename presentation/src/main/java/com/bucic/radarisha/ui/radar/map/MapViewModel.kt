@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.entities.RadarReliabilityVoteEntity
+import com.bucic.domain.usecases.radar.DeleteRadarUseCase
 import com.bucic.domain.usecases.radar.GetRadarsUseCase
 import com.bucic.domain.usecases.radar.VoteReliabilityUseCase
 import com.bucic.domain.util.Result
+import com.bucic.radarisha.entities.toDomain
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val getRadarsUseCase: GetRadarsUseCase,
-    private val voteReliability: VoteReliabilityUseCase
+    private val voteReliability: VoteReliabilityUseCase,
+    private val deleteRadar: DeleteRadarUseCase
 ) : ViewModel() {
 
     private val _radars = MutableStateFlow<Result<List<RadarEntity>>?>(null)
@@ -41,5 +44,17 @@ class MapViewModel @Inject constructor(
         _voteStatusMessage.emit(voteReliability.invoke(radarReliabilityVote))
         _voteCompleted.emit(Unit)
 
+    }
+
+    fun deleteRadar(radar: RadarEntity) = viewModelScope.launch {
+        val result = deleteRadar.invoke(radar)
+        _voteStatusMessage.emit(result)
+        if (result is Result.Success) {
+            val currentRadars = _radars.value
+            if (currentRadars is Result.Success) {
+                _radars.value = Result.Success(currentRadars.data.filter { it.uid != radar.uid })
+            }
+        }
+        _voteCompleted.emit(Unit)
     }
 }
