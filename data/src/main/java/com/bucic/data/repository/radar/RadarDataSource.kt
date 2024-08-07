@@ -10,6 +10,7 @@ interface RadarDataSource {
     interface Remote {
         suspend fun addRadar(radar: RadarEntity): Result<String>
         suspend fun getAllRadars(): Result<List<RadarEntity>>
+        suspend fun getRadarByUid(uid: String): Result<RadarEntity>
         suspend fun deleteRadar(radar: RadarEntity): Result<String>
         suspend fun updateRadar(radar: RadarEntity): Result<String>
 

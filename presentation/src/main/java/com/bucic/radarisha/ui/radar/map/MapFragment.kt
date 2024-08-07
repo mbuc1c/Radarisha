@@ -92,11 +92,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
 
         binding.extendedFab.setOnClickListener {
-            findNavController().navigate(R.id.action_MapFragment_to_RadarCreateFragment)
+            val action = MapFragmentDirections.actionMapFragmentToRadarCreateFragment(null)
+            findNavController().navigate(action)
         }
 
         displayVoteStatusMessage()
-        observeVoteCompletion()
+        observeDialogActionCompletion()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -115,19 +116,25 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             true
         }
 
+        // TODO: Remove marker after editing radar
         displayRadars()
+//        refreshMap()
 
         map.setOnMarkerClickListener { marker ->
-            showDialog(marker)
-            true
+            try {
+                showDialog(marker)
+                true
+            } catch (e: Exception) {
+                false
+            }
         }
         getLastKnownLocation()
     }
 
-    private fun observeVoteCompletion() {
+    private fun observeDialogActionCompletion() {
         Log.d("MyTag", "observeVoteCompletion: Observing vote completion")
         startLifecycleScope {
-            viewModel.voteCompleted.collect {
+            viewModel.dialogActionCompleted.collect {
                 Log.d("MyTag", "observeVoteCompletion: Vote completed")
                 refreshMap()
             }
@@ -153,9 +160,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private fun displayRadars() {
         markerMap.clear()
         fetchRadars()
-        // TODO: Make code cleaner
         startLifecycleScope {
-            viewModel.radars.collectLatest { result ->
+            viewModel.radars.collect { result ->
                 when (result) {
                     is Result.Success -> {
                         val presentationResult: List<RadarMarker> = result.data.mapNotNull { radarEntity ->
@@ -196,6 +202,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                                 }
                             }
                         }
+                        Log.d("MyTag", "markerMap: $markerMap")
                     }
                     is Result.Error -> {
                         Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
@@ -228,7 +235,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             createEditDialog(marker)
         } else createVoteDialog(marker)
     }
-    // TODO: Modify clicks
+
     private fun createEditDialog(marker: Marker) {
         val builder = AlertDialog.Builder(requireContext())
         val dialogBinding = DialogRadarInfoBinding.inflate(layoutInflater)
@@ -237,8 +244,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         builder.setView(dialogBinding.root)
             .setTitle(marker.title)
-            .setPositiveButton(getString(R.string.edit)) { _, _ ->
-                Toast.makeText(requireContext(), "Edit", Toast.LENGTH_SHORT).show()
+            .setPositiveButton(getString(R.string.edit)) { dialog, _ ->
+                val action = MapFragmentDirections.actionMapFragmentToRadarCreateFragment(markerMap[marker]!!.uid)
+                findNavController().navigate(action)
+                dialog.dismiss()
             }
             .setNegativeButton(getString(R.string.delete)) { dialog, _ ->
                 viewModel.deleteRadar(markerMap[marker]!!.toDomain())

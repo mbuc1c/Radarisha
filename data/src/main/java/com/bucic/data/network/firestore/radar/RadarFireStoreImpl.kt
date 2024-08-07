@@ -5,6 +5,7 @@ import com.bucic.data.entities.radar.RadarFSData
 import com.bucic.data.entities.radar.RadarReliabilityVoteFSData
 import com.bucic.data.exception.NoResultFoundException
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.tasks.await
@@ -26,6 +27,17 @@ class RadarFireStoreImpl @Inject constructor(
 
         if (result.isEmpty) {
             throw NoResultFoundException("No radars found")
+        } else return result
+    }
+
+    override suspend fun getRadarByUid(radarUid: String): DocumentSnapshot {
+        val result = db.collection("radars")
+            .document(radarUid)
+            .get()
+            .await()
+
+        if (!result.exists()) {
+            throw NoResultFoundException("No radar found with uid: $radarUid")
         } else return result
     }
 

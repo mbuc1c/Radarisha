@@ -54,6 +54,21 @@ class RadarRemoteDataSource(
         } else return Result.Error("Couldn't fetch new radars.\nNo internet connection.")
     }
 
+    override suspend fun getRadarByUid(uid: String): Result<RadarEntity> {
+        return if (networkConnectivityChecker.isNetworkAvailable()) {
+            try {
+                val result = radarFireStore.getRadarByUid(uid)
+                Result.Success(result.toRadarDomain())
+            } catch (e: NoResultFoundException) {
+                Result.Error(e.message)
+            } catch (e: Exception) {
+                Result.Error(e.message.toString())
+            }
+        } else {
+            Result.Error("No internet connection.")
+        }
+    }
+
     override suspend fun deleteRadar(radar: RadarEntity): Result<String> {
         return if (networkConnectivityChecker.isNetworkAvailable()) {
             try {

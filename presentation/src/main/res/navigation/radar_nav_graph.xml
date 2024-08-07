@@ -24,6 +24,10 @@
         <action
             android:id="@+id/action_RadarCreateFragment_to_AddressFinderFragment"
             app:destination="@id/AddressFinderFragment" />
+        <argument
+            android:name="radarUid"
+            app:argType="string"
+            app:nullable="true" />
     </fragment>
 
     <fragment

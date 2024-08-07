@@ -8,7 +8,6 @@ import com.bucic.domain.usecases.radar.DeleteRadarUseCase
 import com.bucic.domain.usecases.radar.GetRadarsUseCase
 import com.bucic.domain.usecases.radar.VoteReliabilityUseCase
 import com.bucic.domain.util.Result
-import com.bucic.radarisha.entities.toDomain
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,15 +25,15 @@ class MapViewModel @Inject constructor(
     private val deleteRadar: DeleteRadarUseCase
 ) : ViewModel() {
 
+    // TODO: change to SharedFlow
     private val _radars = MutableStateFlow<Result<List<RadarEntity>>?>(null)
     val radars: StateFlow<Result<List<RadarEntity>>?> = _radars.asStateFlow()
 
     private val _voteStatusMessage = MutableSharedFlow<Result<String>?>(replay = 0)
     val voteStatusMessage: SharedFlow<Result<String>?> = _voteStatusMessage
 
-    // SharedFlow to notify about vote completion
-    private val _voteCompleted = MutableSharedFlow<Unit>()
-    val voteCompleted: SharedFlow<Unit> = _voteCompleted.asSharedFlow()
+    private val _dialogActionCompleted = MutableSharedFlow<Unit>()
+    val dialogActionCompleted: SharedFlow<Unit> = _dialogActionCompleted.asSharedFlow()
 
     fun getRadars() = viewModelScope.launch {
         _radars.value = getRadarsUseCase.invoke()
@@ -42,7 +41,7 @@ class MapViewModel @Inject constructor(
 
     fun vote(radarReliabilityVote: RadarReliabilityVoteEntity) = viewModelScope.launch {
         _voteStatusMessage.emit(voteReliability.invoke(radarReliabilityVote))
-        _voteCompleted.emit(Unit)
+        _dialogActionCompleted.emit(Unit)
 
     }
 
@@ -55,6 +54,6 @@ class MapViewModel @Inject constructor(
                 _radars.value = Result.Success(currentRadars.data.filter { it.uid != radar.uid })
             }
         }
-        _voteCompleted.emit(Unit)
+        _dialogActionCompleted.emit(Unit)
     }
 }

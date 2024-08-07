@@ -5,6 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.usecases.radar.CreateRadarUseCase
+import com.bucic.domain.usecases.radar.GetRadarByUidUseCase
+import com.bucic.domain.usecases.radar.UpdateRadarUseCase
 import com.bucic.domain.util.RadarType
 import com.bucic.domain.util.Result
 import com.bucic.radarisha.R
@@ -19,14 +21,20 @@ import javax.inject.Inject
 @HiltViewModel
 class RadarCreateViewModel @Inject constructor(
     application: Application,
-    private val createRadar: CreateRadarUseCase
+    private val createRadar: CreateRadarUseCase,
+    private val getRadar: GetRadarByUidUseCase,
+    private val updateRadar: UpdateRadarUseCase
 ) : AndroidViewModel(application) {
 
     var selectedRadarType: String? = null
     var selectedSpeed: String? = null
     var currentAddress: String? = null
-    var newRadarLocation: LatLng? = null
+    var radarLocation: LatLng? = null
     var currentLocationFetched: Boolean = false
+    var radarDataFetched: Boolean = false
+
+    private val _radarForUpdate = MutableSharedFlow<Result<RadarEntity>?>(replay = 0)
+    val radarForUpdate: SharedFlow<Result<RadarEntity>?> = _radarForUpdate
 
     val radarTypeAdapter: NonFilterArrayAdapter<String>
     val speedAdapter: NonFilterArrayAdapter<String>
@@ -51,5 +59,13 @@ class RadarCreateViewModel @Inject constructor(
 
     fun createRadar(radar: RadarEntity) = viewModelScope.launch {
         _createRadarStatusMessage.emit(createRadar.invoke(radar))
+    }
+
+    fun updateRadar(radar: RadarEntity) = viewModelScope.launch {
+        _createRadarStatusMessage.emit(updateRadar.invoke(radar))
+    }
+
+    fun getRadar(radarUid: String) = viewModelScope.launch {
+        _radarForUpdate.emit(getRadar.invoke(radarUid))
     }
 }

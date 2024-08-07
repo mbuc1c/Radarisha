@@ -20,6 +20,10 @@ class RadarRepositoryImpl(
         remote.getAllRadars()
     }
 
+    override suspend fun getRadarByUid(uid: String): Result<RadarEntity> = withContext(Dispatchers.IO) {
+        remote.getRadarByUid(uid)
+    }
+
     override suspend fun deleteRadar(radar: RadarEntity): Result<String> = withContext(Dispatchers.IO) {
         remote.deleteRadar(radar)
     }

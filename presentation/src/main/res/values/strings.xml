@@ -20,4 +20,6 @@
     <string name="delete">Delete</string>
     <string name="edit">Edit</string>
     <string name="error_no_internet_connection">Failed to create radar. No internet connection.</string>
+    <string name="update">Update radar</string>
+    <string name="create">Create radar</string>
 </resources>

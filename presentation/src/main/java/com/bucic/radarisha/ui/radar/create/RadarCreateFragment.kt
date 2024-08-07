@@ -17,6 +17,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.util.RadarType
 import com.bucic.domain.util.Result
@@ -31,7 +32,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -45,6 +45,7 @@ class RadarCreateFragment : Fragment() {
     private val viewModel: RadarCreateViewModel by viewModels()
     private var _binding: FragmentRadarCreateBinding? = null
     private val binding get() = _binding!!
+    private val args: RadarCreateFragmentArgs by navArgs()
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var geocoder: Geocoder
@@ -68,6 +69,11 @@ class RadarCreateFragment : Fragment() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         geocoder = Geocoder(requireContext(), Locale.getDefault())
 
+        if (args.radarUid != null && !viewModel.radarDataFetched) {
+            viewModel.getRadar(args.radarUid!!)
+            viewModel.radarDataFetched = true
+        }
+
         checkPermission {
             if (!viewModel.currentLocationFetched) {
                 fetchCurrentLocationAndAddress()
@@ -86,7 +92,7 @@ class RadarCreateFragment : Fragment() {
             val latitude = bundle.getDouble(AddressFinderFragment.KEY_LATITUDE)
             val longitude = bundle.getDouble(AddressFinderFragment.KEY_LONGITUDE)
             val address = bundle.getString(AddressFinderFragment.KEY_ADDRESS)
-            viewModel.newRadarLocation = LatLng(latitude, longitude)
+            viewModel.radarLocation = LatLng(latitude, longitude)
             viewModel.currentAddress = address
             binding.tvAddress.text = address
         }
@@ -132,7 +138,7 @@ class RadarCreateFragment : Fragment() {
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location ->
                 location?.let {
-                    viewModel.newRadarLocation = LatLng(it.latitude, it.longitude)
+                    viewModel.radarLocation = LatLng(it.latitude, it.longitude)
                     updateCurrentLocationUI(it.latitude, it.longitude)
                 }
             }
@@ -159,6 +165,32 @@ class RadarCreateFragment : Fragment() {
         binding.typeAutoCompleteTextView.setAdapter(viewModel.radarTypeAdapter)
         binding.speedAutoCompleteTextView.setAdapter(viewModel.speedAdapter)
 
+        if (args.radarUid == null) {
+            binding.createRadarButton.text = getString(R.string.create)
+            binding.createRadarButton.setOnClickListener {
+                createRadar()
+            }
+        } else {
+            binding.createRadarButton.text = getString(R.string.update)
+            binding.createRadarButton.setOnClickListener {
+                updateRadar()
+            }
+        }
+
+        startLifecycleScope {
+            viewModel.radarForUpdate.collect { result ->
+                when (result) {
+                    is Result.Success -> {
+                        viewModel.selectedRadarType = result.data.type.display
+                        viewModel.selectedSpeed = result.data.speed.toString()
+                        viewModel.radarLocation = LatLng(result.data.lat, result.data.lng)
+                        viewModel.currentAddress = getAddress(result.data.lat, result.data.lng)
+                        updateUIWithViewModelData()
+                    }
+                    else -> {}
+                }
+            }
+        }
 
         binding.typeAutoCompleteTextView.setOnItemClickListener { parent, _, position, _ ->
             val selectedType = parent.getItemAtPosition(position) as String
@@ -175,15 +207,15 @@ class RadarCreateFragment : Fragment() {
             removeErrorForField(binding.menuSpeed)
         }
 
-        binding.createRadarButton.setOnClickListener {
-            createRadar()
-        }
-
         binding.findOnMapButton.setOnClickListener {
             navigateToAddressFinder()
         }
 
         updateUIWithViewModelData()
+    }
+
+    private suspend fun getAddress(lat: Double, lng: Double): String? {
+        return Geocoder(requireContext(), Locale.getDefault()).getAddress(lat, lng)?.getAddressLine(0)
     }
 
     private fun updateUIWithViewModelData() {
@@ -215,12 +247,39 @@ class RadarCreateFragment : Fragment() {
                         uid = "Placeholder",
                         creatorUid = activityViewModel.userEntity?.uid
                             ?: "Error with fetching user uid",
-                        lat = viewModel.newRadarLocation?.latitude ?: 0.0,
-                        lng = viewModel.newRadarLocation?.longitude ?: 0.0,
+                        lat = viewModel.radarLocation?.latitude ?: 0.0,
+                        lng = viewModel.radarLocation?.longitude ?: 0.0,
                         type = RadarType.entries.find { it.display == binding.typeAutoCompleteTextView.text.toString() }!!,
                         speed = getSpeedValue(),
                         createdAt = Date(),
                         updatedAt = null,
+                        reliabilityVotes = emptyList()
+                    )
+                )
+            }
+        }
+    }
+
+    private fun updateRadar() {
+        Log.d("MyTag", "updateRadar started")
+        showErrorForField(binding.menuRadarType, getString(R.string.error_empty_radar_type_field))
+        if (binding.menuSpeed.isVisible) {
+            showErrorForField(binding.menuSpeed, getString(R.string.error_empty_radar_speed_field))
+        }
+
+        if (!createRadarError) {
+            startLifecycleScope {
+                viewModel.updateRadar(
+                    RadarEntity(
+                        uid = args.radarUid!!,
+                        creatorUid = activityViewModel.userEntity?.uid
+                            ?: "Error with fetching user uid",
+                        lat = viewModel.radarLocation?.latitude ?: 0.0,
+                        lng = viewModel.radarLocation?.longitude ?: 0.0,
+                        type = RadarType.entries.find { it.display == binding.typeAutoCompleteTextView.text.toString() }!!,
+                        speed = getSpeedValue(),
+                        createdAt = Date(),
+                        updatedAt = Date(),
                         reliabilityVotes = emptyList()
                     )
                 )
