@@ -10,10 +10,14 @@ import com.bucic.data.repository.user.UserDataSource
 import com.bucic.data.repository.user.UserLocalDataSource
 import com.bucic.data.repository.user.UserRemoteDataSource
 import com.bucic.data.repository.user.UserRepositoryImpl
+import com.bucic.data.util.NetworkConnectivityChecker
 import com.bucic.domain.repository.RadarRepository
 import com.bucic.domain.repository.UserRepository
 import com.bucic.domain.usecases.radar.CreateRadarUseCase
+import com.bucic.domain.usecases.radar.DeleteRadarUseCase
+import com.bucic.domain.usecases.radar.GetRadarByUidUseCase
 import com.bucic.domain.usecases.radar.GetRadarsUseCase
+import com.bucic.domain.usecases.radar.UpdateRadarUseCase
 import com.bucic.domain.usecases.radar.VoteReliabilityUseCase
 import com.bucic.domain.usecases.user.CreateUserUseCase
 import com.bucic.domain.usecases.user.GetCurrentUserUseCase
@@ -95,9 +99,10 @@ object DataModule {
     @Provides
     @Singleton
     fun provideRadarRemoteDataSource(
-        radarFireStore: RadarFireStore
+        radarFireStore: RadarFireStore,
+        networkConnectivityChecker: NetworkConnectivityChecker
     ): RadarDataSource.Remote {
-        return RadarRemoteDataSource(radarFireStore)
+        return RadarRemoteDataSource(radarFireStore, networkConnectivityChecker)
     }
 
     @Provides
@@ -111,9 +116,22 @@ object DataModule {
     }
 
     @Provides
+    fun provideGetRadarByUidUseCase(radarRepository: RadarRepository): GetRadarByUidUseCase {
+        return GetRadarByUidUseCase(radarRepository)
+    }
+
+    @Provides
+    fun provideDeleteRadarUseCase(radarRepository: RadarRepository): DeleteRadarUseCase {
+        return DeleteRadarUseCase(radarRepository)
+    }
+
+    @Provides
+    fun provideUpdateRadarUseCase(radarRepository: RadarRepository): UpdateRadarUseCase {
+        return UpdateRadarUseCase(radarRepository)
+    }
+
+    @Provides
     fun provideVoteReliabilityUseCase(radarRepository: RadarRepository): VoteReliabilityUseCase {
         return VoteReliabilityUseCase(radarRepository)
     }
-
-
 }

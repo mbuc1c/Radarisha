@@ -12,7 +12,7 @@ class RadarRepositoryImpl(
     private val remote: RadarDataSource.Remote
 ) : RadarRepository {
 
-    override suspend fun createRadar(radar: RadarEntity) = withContext(Dispatchers.IO) {
+    override suspend fun createRadar(radar: RadarEntity): Result<String> = withContext(Dispatchers.IO) {
         remote.addRadar(radar)
     }
 
@@ -20,8 +20,16 @@ class RadarRepositoryImpl(
         remote.getAllRadars()
     }
 
-    override suspend fun deleteRadar(radar: RadarEntity) {
-        TODO("Not yet implemented")
+    override suspend fun getRadarByUid(uid: String): Result<RadarEntity> = withContext(Dispatchers.IO) {
+        remote.getRadarByUid(uid)
+    }
+
+    override suspend fun deleteRadar(radar: RadarEntity): Result<String> = withContext(Dispatchers.IO) {
+        remote.deleteRadar(radar)
+    }
+
+    override suspend fun updateRadar(radar: RadarEntity): Result<String> = withContext(Dispatchers.IO) {
+        remote.updateRadar(radar)
     }
 
     override suspend fun sync(): Boolean {

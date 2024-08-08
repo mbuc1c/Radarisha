@@ -9,36 +9,6 @@ import androidx.core.content.ContextCompat
 
 object VectorDrawableUtils {
 
-//    fun getBitmapFromVectorDrawable(context: Context, drawableId: Int, text: String): Bitmap {
-//        val drawable = ContextCompat.getDrawable(context, drawableId)
-//        val bitmap = Bitmap.createBitmap(drawable!!.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
-//        val canvas = Canvas(bitmap)
-//        drawable.setBounds(0, 0, canvas.width, canvas.height)
-//        drawable.draw(canvas)
-//
-//        // Draw the text on top of the bitmap
-//        val paint = Paint()
-//        paint.color = android.graphics.Color.BLACK
-//        paint.textSize = 40f
-//        paint.textAlign = Paint.Align.CENTER
-//
-//        // Calculate position for text (centered)
-//        val xPos = canvas.width / 2
-//        val yPos = (canvas.height / 2 - (paint.descent() + paint.ascent()) / 2).toInt()
-//        canvas.drawText(text, xPos.toFloat(), yPos.toFloat(), paint)
-//
-//        return bitmap
-//    }
-
-//    fun getBitmapFromVectorDrawable(context: Context, drawableId: Int): Bitmap {
-//        val drawable = ContextCompat.getDrawable(context, drawableId)
-//        val bitmap = Bitmap.createBitmap(drawable!!.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
-//        val canvas = Canvas(bitmap)
-//        drawable.setBounds(0, 0, canvas.width, canvas.height)
-//        drawable.draw(canvas)
-//        return bitmap
-//    }
-
     fun getBitmapFromVectorDrawable(
         context: Context,
         drawableId: Int,

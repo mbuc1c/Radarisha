@@ -5,6 +5,7 @@ import com.bucic.data.entities.radar.RadarFSData
 import com.bucic.data.entities.radar.RadarReliabilityVoteFSData
 import com.bucic.data.exception.NoResultFoundException
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.tasks.await
@@ -28,7 +29,38 @@ class RadarFireStoreImpl @Inject constructor(
             throw NoResultFoundException("No radars found")
         } else return result
     }
-// TODO: change from domain entity to data entity
+
+    override suspend fun getRadarByUid(radarUid: String): DocumentSnapshot {
+        val result = db.collection("radars")
+            .document(radarUid)
+            .get()
+            .await()
+
+        if (!result.exists()) {
+            throw NoResultFoundException("No radar found with uid: $radarUid")
+        } else return result
+    }
+
+    override suspend fun deleteRadar(radarUid: String) {
+        db.collection("radars")
+            .document(radarUid)
+            .delete()
+    }
+
+    override suspend fun updateRadar(radar: RadarFSData, radarUid: String) {
+        db.collection("radars")
+            .document(radarUid)
+            .update(
+                mapOf(
+                    "lat" to radar.lat,
+                    "lng" to radar.lng,
+                    "type" to radar.type,
+                    "speed" to radar.speed,
+                    "updatedAt" to radar.updatedAt
+                )
+            )
+    }
+
     override fun vote(radarReliabilityVote: RadarReliabilityVoteFSData, radarUid: String) {
         val radarRef = db.collection("radars").document(radarUid)
         val voteSubcollectionRef = radarRef.collection("reliability")
