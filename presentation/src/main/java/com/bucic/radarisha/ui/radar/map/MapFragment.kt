@@ -78,6 +78,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        fetchRadars()
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         geocoder = Geocoder(requireContext(), Locale.getDefault())
 
@@ -116,9 +118,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             true
         }
 
-        // TODO: Remove marker after editing radar
         displayRadars()
-//        refreshMap()
 
         map.setOnMarkerClickListener { marker ->
             try {
@@ -132,18 +132,16 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun observeDialogActionCompletion() {
-        Log.d("MyTag", "observeVoteCompletion: Observing vote completion")
         startLifecycleScope {
             viewModel.dialogActionCompleted.collect {
-                Log.d("MyTag", "observeVoteCompletion: Vote completed")
-                refreshMap()
+                fetchRadars()
             }
         }
     }
 
     private fun displayVoteStatusMessage() {
         startLifecycleScope {
-            viewModel.voteStatusMessage.collectLatest { result ->
+            viewModel.dialogActionStatusMessage.collectLatest { result ->
                 when (result) {
                     is Result.Success -> {
                         Toast.makeText(requireContext(), result.data, Toast.LENGTH_SHORT).show()
@@ -157,52 +155,53 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun displayRadars() {
+    private fun generateMarkerOptions(radar: RadarMarker): Pair<MarkerOptions, RadarMarker>? {
+        val markerOptions = when (radar) {
+            is RadarMarker.SpeedCamera -> {
+                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes), radar.speed.toString())
+                MarkerOptions()
+                    .position(LatLng(radar.lat, radar.lng))
+                    .title("Speed camera: ${radar.speed} km/h")
+                    .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+            }
+            is RadarMarker.PoliceCar -> {
+                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes))
+                MarkerOptions()
+                    .position(LatLng(radar.lat, radar.lng))
+                    .title("Police car")
+                    .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+            }
+            is RadarMarker.CarAccident -> {
+                val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes))
+                MarkerOptions()
+                    .position(LatLng(radar.lat, radar.lng))
+                    .title("Car accident")
+                    .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+            }
+        }
+        return markerOptions?.let { Pair(it, radar) }
+    }
+
+    private fun addMarkersToMap(markerOptionsList: List<Pair<MarkerOptions, RadarMarker>>) {
+        map.clear()
         markerMap.clear()
-        fetchRadars()
+
+        for ((markerOptions, radar) in markerOptionsList) {
+            val marker = map.addMarker(markerOptions)
+            marker?.let { markerMap[it] = radar }
+        }
+        Log.d("MyTag", "markerMap: $markerMap")
+    }
+
+    private fun displayRadars() {
         startLifecycleScope {
             viewModel.radars.collect { result ->
                 when (result) {
                     is Result.Success -> {
-                        val presentationResult: List<RadarMarker> = result.data.mapNotNull { radarEntity ->
-                            radarEntity.toPresentation()
+                        val markerOptionsList = result.data.mapNotNull { radarEntity ->
+                            radarEntity.toPresentation()?.let { generateMarkerOptions(it) }
                         }
-                        for (radar in presentationResult) {
-                            when (radar) {
-                                is RadarMarker.SpeedCamera -> {
-                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes), radar.speed.toString())
-                                    val marker = map.addMarker(
-                                        MarkerOptions()
-                                            .position(LatLng(radar.lat, radar.lng))
-                                            .title("Speed camera: ${radar.speed} km/h")
-                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
-                                    )
-                                    marker?.let { markerMap.put(it, radar) }
-                                }
-                                is RadarMarker.PoliceCar -> {
-                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes))
-                                    val marker = map.addMarker(
-                                        MarkerOptions()
-                                            .position(LatLng(radar.lat, radar.lng))
-                                            .title("Police car")
-                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
-                                    )
-                                    marker?.let { markerMap.put(it, radar) }
-
-                                }
-                                is RadarMarker.CarAccident -> {
-                                    val bitmap = VectorDrawableUtils.getBitmapFromVectorDrawable(requireContext(), radar.icon, getReliabilityColor(radar.reliabilityVotes))
-                                    val marker = map.addMarker(
-                                        MarkerOptions()
-                                            .position(LatLng(radar.lat, radar.lng))
-                                            .title("Car accident")
-                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
-                                    )
-                                    marker?.let { markerMap.put(it, radar) }
-                                }
-                            }
-                        }
-                        Log.d("MyTag", "markerMap: $markerMap")
+                        addMarkersToMap(markerOptionsList)
                     }
                     is Result.Error -> {
                         Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
@@ -251,7 +250,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             }
             .setNegativeButton(getString(R.string.delete)) { dialog, _ ->
                 viewModel.deleteRadar(markerMap[marker]!!.toDomain())
-                marker.remove()
+//                marker.remove()
                 dialog.dismiss()
             }
             .show()
@@ -292,15 +291,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 dialog.dismiss()
             }
             .show()
-    }
-
-    private fun refreshMap() {
-        Log.d("MyTag", "refreshMap: starting refresh map")
-        if (::map.isInitialized) {
-            Log.d("MyTag", "refreshMap: refreshing map")
-            map.clear()
-            displayRadars()
-        }
     }
 
     private fun displayDialogInfo(binding: DialogRadarInfoBinding, marker: Marker) {

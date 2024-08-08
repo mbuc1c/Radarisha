@@ -182,11 +182,12 @@ class RadarCreateFragment : Fragment() {
                 when (result) {
                     is Result.Success -> {
                         viewModel.selectedRadarType = result.data.type.display
-                        viewModel.selectedSpeed = result.data.speed.toString()
+                        viewModel.selectedSpeed = result.data.speed?.toString()
                         viewModel.radarLocation = LatLng(result.data.lat, result.data.lng)
                         viewModel.currentAddress = getAddress(result.data.lat, result.data.lng)
                         updateUIWithViewModelData()
                     }
+
                     else -> {}
                 }
             }
@@ -215,7 +216,8 @@ class RadarCreateFragment : Fragment() {
     }
 
     private suspend fun getAddress(lat: Double, lng: Double): String? {
-        return Geocoder(requireContext(), Locale.getDefault()).getAddress(lat, lng)?.getAddressLine(0)
+        return Geocoder(requireContext(), Locale.getDefault()).getAddress(lat, lng)
+            ?.getAddressLine(0)
     }
 
     private fun updateUIWithViewModelData() {
@@ -288,9 +290,12 @@ class RadarCreateFragment : Fragment() {
     }
 
     private fun showErrorForField(field: TextInputLayout, message: String) {
-        if (field.editText?.text?.isEmpty() == true) {
+        val text = field.editText?.text?.toString()
+        if (text.isNullOrEmpty()) {
             field.error = message
             createRadarError = true
+        } else {
+            field.error = null  // Clear the error if the field is not empty
         }
     }
 
@@ -299,6 +304,7 @@ class RadarCreateFragment : Fragment() {
         createRadarError = false
     }
 
+    // TODO: catch null
     private fun getSpeedValue(): Int? {
         return if (binding.typeAutoCompleteTextView.text.toString() != RadarType.SPEED_CAMERA.display) {
             null

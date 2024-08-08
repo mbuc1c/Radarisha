@@ -10,50 +10,39 @@ import com.bucic.domain.usecases.radar.VoteReliabilityUseCase
 import com.bucic.domain.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
-    private val getRadarsUseCase: GetRadarsUseCase,
+    private val getRadars: GetRadarsUseCase,
     private val voteReliability: VoteReliabilityUseCase,
     private val deleteRadar: DeleteRadarUseCase
 ) : ViewModel() {
 
-    // TODO: change to SharedFlow
-    private val _radars = MutableStateFlow<Result<List<RadarEntity>>?>(null)
-    val radars: StateFlow<Result<List<RadarEntity>>?> = _radars.asStateFlow()
+    private val _radars = MutableSharedFlow<Result<List<RadarEntity>>?>(replay = 0)
+    val radars: SharedFlow<Result<List<RadarEntity>>?> = _radars.asSharedFlow()
 
-    private val _voteStatusMessage = MutableSharedFlow<Result<String>?>(replay = 0)
-    val voteStatusMessage: SharedFlow<Result<String>?> = _voteStatusMessage
+    private val _dialogActionStatusMessage = MutableSharedFlow<Result<String>?>(replay = 0)
+    val dialogActionStatusMessage: SharedFlow<Result<String>?> = _dialogActionStatusMessage
 
     private val _dialogActionCompleted = MutableSharedFlow<Unit>()
     val dialogActionCompleted: SharedFlow<Unit> = _dialogActionCompleted.asSharedFlow()
 
     fun getRadars() = viewModelScope.launch {
-        _radars.value = getRadarsUseCase.invoke()
-    }
-
-    fun vote(radarReliabilityVote: RadarReliabilityVoteEntity) = viewModelScope.launch {
-        _voteStatusMessage.emit(voteReliability.invoke(radarReliabilityVote))
-        _dialogActionCompleted.emit(Unit)
-
+        _radars.emit(getRadars.invoke())
     }
 
     fun deleteRadar(radar: RadarEntity) = viewModelScope.launch {
-        val result = deleteRadar.invoke(radar)
-        _voteStatusMessage.emit(result)
-        if (result is Result.Success) {
-            val currentRadars = _radars.value
-            if (currentRadars is Result.Success) {
-                _radars.value = Result.Success(currentRadars.data.filter { it.uid != radar.uid })
-            }
-        }
+        _dialogActionStatusMessage.emit(deleteRadar.invoke(radar))
         _dialogActionCompleted.emit(Unit)
+    }
+
+    fun vote(radarReliabilityVote: RadarReliabilityVoteEntity) = viewModelScope.launch {
+        _dialogActionStatusMessage.emit(voteReliability.invoke(radarReliabilityVote))
+        _dialogActionCompleted.emit(Unit)
+
     }
 }
