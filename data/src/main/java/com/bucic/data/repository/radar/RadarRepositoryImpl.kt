@@ -9,7 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class RadarRepositoryImpl(
-    private val remote: RadarDataSource.Remote
+    private val remote: RadarDataSource.Remote,
+    private val local: RadarDataSource.Local
 ) : RadarRepository {
 
     override suspend fun createRadar(radar: RadarEntity): Result<String> = withContext(Dispatchers.IO) {
@@ -17,7 +18,8 @@ class RadarRepositoryImpl(
     }
 
     override suspend fun getRadars(): Result<List<RadarEntity>> = withContext(Dispatchers.IO) {
-        remote.getAllRadars()
+        sync()
+        local.getAllRadars()
     }
 
     override suspend fun getRadarByUid(uid: String): Result<RadarEntity> = withContext(Dispatchers.IO) {
@@ -33,7 +35,11 @@ class RadarRepositoryImpl(
     }
 
     override suspend fun sync(): Boolean {
-        TODO("Not yet implemented")
+        val radars = remote.getAllRadars()
+        return if (radars is Result.Success) {
+            local.addRadars(radars.data)
+            true
+        } else false
     }
 
     override suspend fun vote(radarReliabilityVote: RadarReliabilityVoteEntity): Result<String> = withContext(Dispatchers.IO) {

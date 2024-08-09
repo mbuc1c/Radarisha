@@ -12,7 +12,6 @@ class UserFireStoreImpl @Inject constructor(
     private val db: FirebaseFirestore
 ) : UserFireStore {
     override suspend fun createUser(user: UserFSData) {
-        // TODO: res str value
         db.collection("users")
             .add(user)
             .addOnSuccessListener { documentReference ->

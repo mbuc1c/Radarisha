@@ -304,7 +304,6 @@ class RadarCreateFragment : Fragment() {
         createRadarError = false
     }
 
-    // TODO: catch null
     private fun getSpeedValue(): Int? {
         return if (binding.typeAutoCompleteTextView.text.toString() != RadarType.SPEED_CAMERA.display) {
             null

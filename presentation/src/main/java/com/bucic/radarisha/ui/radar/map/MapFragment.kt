@@ -78,8 +78,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        fetchRadars()
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         geocoder = Geocoder(requireContext(), Locale.getDefault())
 
@@ -117,7 +115,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             getLastKnownLocation()
             true
         }
-
+        fetchRadars()
         displayRadars()
 
         map.setOnMarkerClickListener { marker ->

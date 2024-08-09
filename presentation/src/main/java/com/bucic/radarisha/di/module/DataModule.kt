@@ -1,9 +1,12 @@
 package com.bucic.radarisha.di.module
 
+import com.bucic.data.database.radar.dao.RadarDao
+import com.bucic.data.database.radar.dao.RadarReliabilityVoteDao
 import com.bucic.data.database.user.dao.UserDao
 import com.bucic.data.network.firestore.radar.RadarFireStore
 import com.bucic.data.network.firestore.user.UserFireStore
 import com.bucic.data.repository.radar.RadarDataSource
+import com.bucic.data.repository.radar.RadarLocalDataSource
 import com.bucic.data.repository.radar.RadarRemoteDataSource
 import com.bucic.data.repository.radar.RadarRepositoryImpl
 import com.bucic.data.repository.user.UserDataSource
@@ -92,8 +95,9 @@ object DataModule {
     @Singleton
     fun provideRadarRepositoryImpl(
         remote: RadarDataSource.Remote,
+        local: RadarDataSource.Local
     ): RadarRepository {
-        return RadarRepositoryImpl(remote)
+        return RadarRepositoryImpl(remote, local)
     }
 
     @Provides
@@ -103,6 +107,15 @@ object DataModule {
         networkConnectivityChecker: NetworkConnectivityChecker
     ): RadarDataSource.Remote {
         return RadarRemoteDataSource(radarFireStore, networkConnectivityChecker)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRadarLocalDataSource(
+        radarDao: RadarDao,
+        radarReliabilityVoteDao: RadarReliabilityVoteDao
+    ): RadarDataSource.Local {
+        return RadarLocalDataSource(radarDao, radarReliabilityVoteDao)
     }
 
     @Provides
