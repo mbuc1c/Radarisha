@@ -1,6 +1,8 @@
 package com.bucic.data.mapper
 
+import com.bucic.data.entities.radar.RadarDbData
 import com.bucic.data.entities.radar.RadarFSData
+import com.bucic.data.entities.radar.RadarReliabilityVoteDbData
 import com.bucic.data.entities.radar.RadarReliabilityVoteFSData
 import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.entities.RadarReliabilityVoteEntity
@@ -45,4 +47,24 @@ fun DocumentSnapshot.toRadarReliabilityVoteDomain() = RadarReliabilityVoteEntity
     vote = data!!["vote"] as Boolean,
     createdAt = (data!!["createdAt"] as Timestamp).toDate(),
     updatedAt = (data!!["updatedAt"] as? Timestamp)?.toDate()
+)
+
+fun RadarEntity.toDbData() = RadarDbData(
+    uid = uid,
+    creatorUid = creatorUid,
+    lat = lat,
+    lng = lng,
+    type = type,
+    speed = speed,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun RadarReliabilityVoteEntity.toDbData() = RadarReliabilityVoteDbData(
+    uid = uid,
+    radarUid = radarUid,
+    voterUid = voterUid,
+    vote = vote,
+    createdAt = createdAt,
+    updatedAt = updatedAt
 )
