@@ -7,6 +7,9 @@ buildscript {
 
         def nav_version = "2.7.7"
         classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$nav_version"
+
+        // TODO: needed?
+        classpath "com.android.tools.build:gradle:8.1.4"
     }
 }
 

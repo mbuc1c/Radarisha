@@ -5,4 +5,5 @@
     <color name="green">#FF00FF00</color>
     <color name="red">#FFFF0000</color>
     <color name="orange">#FFFFA500</color>
+    <color name="icon_background">#252569</color>
 </resources>

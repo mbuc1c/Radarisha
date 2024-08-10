@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Background Color Layer -->
+    <item android:drawable="@color/icon_background" />
+
+    <!-- Foreground Icon Layer Centered -->
+    <item
+        android:width="@dimen/splash_icon_size"
+        android:height="@dimen/splash_icon_size"
+        android:drawable="@drawable/ic_launcher_foreground"
+        android:gravity="center">
+    </item>
+
+</layer-list>
