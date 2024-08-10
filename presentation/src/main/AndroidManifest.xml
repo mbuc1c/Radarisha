@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:name=".App"
@@ -17,6 +17,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Radarisha"
         tools:targetApi="31">
+
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
@@ -25,11 +27,8 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".ui.radar.RadarActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Radarisha" />
-        <activity
-            android:name=".ui.auth.AuthActivity"
+            android:name=".ui.splash.SplashActivity"
+            android:theme="@style/SplashTheme"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -37,6 +36,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.radar.RadarActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Radarisha" />
+        <activity
+            android:name=".ui.auth.AuthActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Radarisha" />
     </application>
 
 </manifest>
