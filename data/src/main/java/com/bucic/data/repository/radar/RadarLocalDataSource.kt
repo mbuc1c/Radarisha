@@ -14,7 +14,6 @@ class RadarLocalDataSource(
 ) : RadarDataSource.Local {
     override suspend fun addRadar(radar: RadarEntity) {
         radarDao.insert(radar.toDbData())
-//        radarReliabilityVoteDao.insert(radar.reliabilityVotes.map { it.toDbData() })
     }
 
     override suspend fun addRadars(radars: List<RadarEntity>) {
@@ -23,6 +22,7 @@ class RadarLocalDataSource(
 
         radarReliabilityVoteDao.deleteAll()
         for (radar in radars) {
+            Log.d("MyTag", "Inserting radar: ${radar.uid} List content ${radar.reliabilityVotes}")
             radarReliabilityVoteDao.insertAll(radar.reliabilityVotes.map { it.toDbData() })
         }
     }

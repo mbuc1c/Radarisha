@@ -9,7 +9,6 @@ import com.bucic.domain.entities.RadarReliabilityVoteEntity
 import com.bucic.domain.util.RadarType
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.QuerySnapshot
 
 
 fun RadarEntity.toFSData() = RadarFSData(
@@ -40,14 +39,17 @@ fun DocumentSnapshot.toRadarDomain() = RadarEntity(
     updatedAt = (data!!["updatedAt"] as? Timestamp)?.toDate()
 )
 
-fun DocumentSnapshot.toRadarReliabilityVoteDomain() = RadarReliabilityVoteEntity(
-    uid = id,
-    radarUid = data!!["radarUid"].toString(),
-    voterUid = data!!["voterUid"].toString(),
-    vote = data!!["vote"] as Boolean,
-    createdAt = (data!!["createdAt"] as Timestamp).toDate(),
-    updatedAt = (data!!["updatedAt"] as? Timestamp)?.toDate()
-)
+fun DocumentSnapshot.toRadarReliabilityVoteDomain(): RadarReliabilityVoteEntity {
+    val radarUid = reference.parent.parent?.id ?: throw IllegalArgumentException("Parent document ID is missing")
+    return RadarReliabilityVoteEntity(
+        uid = id,
+        radarUid = radarUid,
+        voterUid = data!!["voterUid"].toString(),
+        vote = data!!["vote"] as Boolean,
+        createdAt = (data!!["createdAt"] as Timestamp).toDate(),
+        updatedAt = (data!!["updatedAt"] as? Timestamp)?.toDate()
+    )
+}
 
 fun RadarEntity.toDbData() = RadarDbData(
     uid = uid,

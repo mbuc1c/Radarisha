@@ -73,7 +73,7 @@ class LoginFragment : Fragment() {
             }
         }
 
-        // TODO: add this to splash screen
+        // TODO: remove
         lifecycleScope.launch {
             viewModel.currentUser.collectLatest { result ->
                 when (result) {
