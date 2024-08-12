@@ -12,8 +12,6 @@ import com.bucic.radarisha.ui.radar.RadarActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import com.bucic.domain.util.Result
-import kotlinx.coroutines.flow.collect
 
 @SuppressLint("CustomSplashScreen")
 @AndroidEntryPoint

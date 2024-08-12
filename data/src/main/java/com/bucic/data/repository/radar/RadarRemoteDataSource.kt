@@ -10,7 +10,6 @@ import com.bucic.data.util.NetworkConnectivityChecker
 import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.entities.RadarReliabilityVoteEntity
 import com.bucic.domain.util.Result
-import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.tasks.await
 
 class RadarRemoteDataSource(
