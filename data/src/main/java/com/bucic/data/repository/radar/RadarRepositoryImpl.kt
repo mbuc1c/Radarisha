@@ -4,8 +4,10 @@ import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.entities.RadarReliabilityVoteEntity
 import com.bucic.domain.entities.UserEntity
 import com.bucic.domain.repository.RadarRepository
+import com.bucic.domain.util.RadarsCallback
 import com.bucic.domain.util.Result
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 class RadarRepositoryImpl(
@@ -17,9 +19,8 @@ class RadarRepositoryImpl(
         remote.addRadar(radar)
     }
 
-    override suspend fun getRadars(): Result<List<RadarEntity>> = withContext(Dispatchers.IO) {
-        sync()
-        local.getAllRadars()
+    override fun getRadars(callback: RadarsCallback) {
+        remote.getAllRadars(callback)
     }
 
     override suspend fun getRadarByUid(uid: String): Result<RadarEntity> = withContext(Dispatchers.IO) {
@@ -35,11 +36,12 @@ class RadarRepositoryImpl(
     }
 
     override suspend fun sync(): Boolean {
-        val radars = remote.getAllRadars()
-        return if (radars is Result.Success) {
-            local.addRadars(radars.data)
-            true
-        } else false
+//        val radars = remote.getAllRadars()
+//        return if (radars is Result.Success) {
+//            local.addRadars(radars.data)
+//            true
+//        } else false
+        TODO("Not yet implemented")
     }
 
     override suspend fun vote(radarReliabilityVote: RadarReliabilityVoteEntity): Result<String> = withContext(Dispatchers.IO) {

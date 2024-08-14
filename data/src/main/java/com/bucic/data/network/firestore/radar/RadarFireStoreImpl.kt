@@ -4,10 +4,15 @@ import android.util.Log
 import com.bucic.data.entities.radar.RadarFSData
 import com.bucic.data.entities.radar.RadarReliabilityVoteFSData
 import com.bucic.data.exception.NoResultFoundException
+import com.bucic.data.mapper.toRadarDomain
+import com.bucic.domain.util.RadarsCallback
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -20,14 +25,36 @@ class RadarFireStoreImpl @Inject constructor(
             .add(radar)
     }
 
-    override suspend fun getAllRadars(): QuerySnapshot {
-        val result = db.collection("radars")
-            .get()
-            .await()
+//    = callbackFlow
+    override fun getRadarSnapshots(callback: RadarsCallback) {
+//        val listenerRegistration = db.collection("radars")
+//            .addSnapshotListener { snapshot, error ->
+//                if (error != null) {
+//                    close(error)
+//                    return@addSnapshotListener
+//                }
+//
+//                if (snapshot != null) {
+//                    trySend(snapshot)
+//                }
+//            }
+//        awaitClose { listenerRegistration.remove() }
+    db.collection("radars")
+        .addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                callback.onError(error.message ?: "Unknown error occurred")
+                return@addSnapshotListener
+            }
 
-        if (result.isEmpty) {
-            throw NoResultFoundException("No radars found")
-        } else return result
+            if (snapshot != null) {
+                try {
+                    val radarList = snapshot.documents.map { it.toRadarDomain() }
+                    callback.onSuccess(radarList)
+                } catch (exception: Exception) {
+                    callback.onError(exception.message ?: "Error parsing data")
+                }
+            }
+        }
     }
 
     override suspend fun getRadarByUid(radarUid: String): DocumentSnapshot {

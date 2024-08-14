@@ -97,7 +97,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
 
         displayVoteStatusMessage()
-        observeDialogActionCompletion()
+//        observeDialogActionCompletion()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -115,7 +115,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             getLastKnownLocation()
             true
         }
-        fetchRadars()
+//        fetchRadars()
         displayRadars()
 
         map.setOnMarkerClickListener { marker ->
@@ -132,7 +132,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private fun observeDialogActionCompletion() {
         startLifecycleScope {
             viewModel.dialogActionCompleted.collect {
-                fetchRadars()
+//                fetchRadars()
             }
         }
     }
@@ -193,7 +193,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private fun displayRadars() {
         startLifecycleScope {
-            viewModel.radars.collect { result ->
+            viewModel.radars.observe(viewLifecycleOwner) { result ->
                 when (result) {
                     is Result.Success -> {
                         val markerOptionsList = result.data.mapNotNull { radarEntity ->
@@ -222,9 +222,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         viewLifecycleOwner.lifecycleScope.launch { action() }
     }
 
-    private fun fetchRadars() {
-        viewModel.getRadars()
-    }
+//    private fun fetchRadars() {
+//        viewModel.getRadars()
+//    }
 
     private fun showDialog(marker: Marker) {
         val radarMarker = markerMap[marker]
