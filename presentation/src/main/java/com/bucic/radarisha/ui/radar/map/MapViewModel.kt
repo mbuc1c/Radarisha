@@ -1,6 +1,5 @@
 package com.bucic.radarisha.ui.radar.map
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bucic.domain.entities.RadarEntity
@@ -12,9 +11,7 @@ import com.bucic.domain.util.RadarsCallback
 import com.bucic.domain.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,10 +23,8 @@ class MapViewModel @Inject constructor(
     private val deleteRadar: DeleteRadarUseCase
 ) : ViewModel() {
 
-//    private val _radars = MutableSharedFlow<Result<List<RadarEntity>>>()
-//    val radars: SharedFlow<Result<List<RadarEntity>>> = _radars.asSharedFlow()
-
-    val radars = MutableLiveData<Result<List<RadarEntity>>>()
+    private val _radars = MutableSharedFlow<Result<List<RadarEntity>>>(replay = 1)
+    val radars: SharedFlow<Result<List<RadarEntity>>> = _radars.asSharedFlow()
 
     private val _dialogActionStatusMessage = MutableSharedFlow<Result<String>?>(replay = 0)
     val dialogActionStatusMessage: SharedFlow<Result<String>?> = _dialogActionStatusMessage
@@ -40,11 +35,15 @@ class MapViewModel @Inject constructor(
     init {
         getRadars.invoke(object : RadarsCallback {
             override fun onSuccess(data: List<RadarEntity>) {
-                radars.postValue(Result.Success(data))
+                viewModelScope.launch {
+                    _radars.emit(Result.Success(data))
+                }
             }
 
             override fun onError(message: String) {
-                radars.postValue(Result.Error(message))
+                viewModelScope.launch {
+                    _radars.emit(Result.Error(message))
+                }
             }
 
         })

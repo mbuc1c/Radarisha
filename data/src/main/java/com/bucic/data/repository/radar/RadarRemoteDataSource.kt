@@ -9,6 +9,7 @@ import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.entities.RadarReliabilityVoteEntity
 import com.bucic.domain.util.RadarsCallback
 import com.bucic.domain.util.Result
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -31,8 +32,8 @@ class RadarRemoteDataSource(
         }
     }
 
-    override fun getAllRadars(callback: RadarsCallback) {
-        radarFireStore.getRadarSnapshots(callback)
+    override fun getAllRadars(scope: CoroutineScope, callback: RadarsCallback) {
+        radarFireStore.getRadarSnapshots(scope, callback)
     }
 //        return if (networkConnectivityChecker.isNetworkAvailable()) {
 ////            try {

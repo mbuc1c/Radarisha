@@ -6,6 +6,7 @@ import com.bucic.domain.entities.UserEntity
 import com.bucic.domain.repository.RadarRepository
 import com.bucic.domain.util.RadarsCallback
 import com.bucic.domain.util.Result
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -20,7 +21,8 @@ class RadarRepositoryImpl(
     }
 
     override fun getRadars(callback: RadarsCallback) {
-        remote.getAllRadars(callback)
+        val scope = CoroutineScope(Dispatchers.IO)
+        remote.getAllRadars(scope, callback)
     }
 
     override suspend fun getRadarByUid(uid: String): Result<RadarEntity> = withContext(Dispatchers.IO) {

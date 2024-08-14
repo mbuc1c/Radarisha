@@ -42,6 +42,7 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -193,7 +194,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private fun displayRadars() {
         startLifecycleScope {
-            viewModel.radars.observe(viewLifecycleOwner) { result ->
+            viewModel.radars.collect { result ->
                 when (result) {
                     is Result.Success -> {
                         val markerOptionsList = result.data.mapNotNull { radarEntity ->
