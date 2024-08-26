@@ -32,30 +32,9 @@ class RadarRemoteDataSource(
         }
     }
 
-    override fun getAllRadars(scope: CoroutineScope, callback: RadarsCallback) {
-        radarFireStore.getRadarSnapshots(scope, callback)
+    override fun getAllRadars(callback: RadarsCallback) {
+        radarFireStore.getRadarSnapshots(callback)
     }
-//        return if (networkConnectivityChecker.isNetworkAvailable()) {
-////            try {
-////                val result = radarFireStore.getAllRadars()
-////                val radarList = result.documents.map { radarDoc ->
-////                    val radarData = radarDoc.toRadarDomain()
-////                    val reliabilityVotesSnapshot =
-////                        radarDoc.reference.collection("reliability").get().await()
-////                    val reliabilityVotes = reliabilityVotesSnapshot.documents.map { voteDoc ->
-////                        voteDoc.toRadarReliabilityVoteDomain()
-////                    }
-////                    radarData.copy(reliabilityVotes = reliabilityVotes)
-////                }
-////                Log.d("MyTag", "getAllRadars: $radarList")
-////                Result.Success(radarList)
-////            } catch (e: NoResultFoundException) {
-////                Result.Error(e.message)
-////            } catch (e: Exception) {
-////                Result.Error(e.message.toString())
-////            }
-//        } else return Result.Error("Couldn't fetch new radars.\nNo internet connection.")
-
 
     override suspend fun getRadarByUid(uid: String): Result<RadarEntity> {
         return if (networkConnectivityChecker.isNetworkAvailable()) {

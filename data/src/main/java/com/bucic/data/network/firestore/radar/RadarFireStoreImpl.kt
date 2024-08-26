@@ -36,7 +36,7 @@ class RadarFireStoreImpl @Inject constructor(
             .add(radar)
     }
 
-    override fun getRadarSnapshots(scope: CoroutineScope, callback: RadarsCallback) {
+    override fun getRadarSnapshots(callback: RadarsCallback) {
         val radarsListenerRegistration = db.collection("radars")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -64,7 +64,6 @@ class RadarFireStoreImpl @Inject constructor(
                 }
             }
 
-        // Store the radar listener for cleanup
         reliabilityListeners["radarsListener"] = radarsListenerRegistration
     }
 
@@ -73,10 +72,8 @@ class RadarFireStoreImpl @Inject constructor(
         radarData: RadarEntity,
         callback: RadarsCallback
     ) {
-        // Remove the old listener if it exists
         reliabilityListeners[radarId]?.remove()
 
-        // Listen for changes in the reliability votes
         val reliabilityListenerRegistration = db.collection("radars")
             .document(radarId)
             .collection("reliability")
@@ -90,17 +87,12 @@ class RadarFireStoreImpl @Inject constructor(
                     val reliabilityVotes = reliabilitySnapshot.documents.map { voteDoc ->
                         voteDoc.toRadarReliabilityVoteDomain()
                     }
-
-                    // Update the radar data in the map with the new reliability votes
                     val updatedRadar = radarData.copy(reliabilityVotes = reliabilityVotes)
                     radarMap[radarId] = updatedRadar
 
-                    // Emit the updated radar list
                     callback.onSuccess(radarMap.values.toList())
                 }
             }
-
-        // Store the listener for cleanup
         reliabilityListeners[radarId] = reliabilityListenerRegistration
     }
 

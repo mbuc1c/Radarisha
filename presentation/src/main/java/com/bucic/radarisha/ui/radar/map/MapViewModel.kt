@@ -6,6 +6,7 @@ import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.entities.RadarReliabilityVoteEntity
 import com.bucic.domain.usecases.radar.DeleteRadarUseCase
 import com.bucic.domain.usecases.radar.GetRadarsUseCase
+import com.bucic.domain.usecases.radar.SyncRadarsUseCase
 import com.bucic.domain.usecases.radar.VoteReliabilityUseCase
 import com.bucic.domain.util.RadarsCallback
 import com.bucic.domain.util.Result
@@ -19,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val getRadars: GetRadarsUseCase,
+    private val syncRadarsUseCase: SyncRadarsUseCase,
     private val voteReliability: VoteReliabilityUseCase,
     private val deleteRadar: DeleteRadarUseCase
 ) : ViewModel() {
@@ -33,25 +35,27 @@ class MapViewModel @Inject constructor(
     val dialogActionCompleted: SharedFlow<Unit> = _dialogActionCompleted.asSharedFlow()
 
     init {
-        getRadars.invoke(object : RadarsCallback {
-            override fun onSuccess(data: List<RadarEntity>) {
-                viewModelScope.launch {
-                    _radars.emit(Result.Success(data))
-                }
-            }
+        // Perform initial sync first to load the data
+        viewModelScope.launch {
+            syncRadarsUseCase.invoke()
 
-            override fun onError(message: String) {
-                viewModelScope.launch {
-                    _radars.emit(Result.Error(message))
+            // After sync, start listening for realtime updates
+            getRadars.invoke(object : RadarsCallback {
+                override fun onSuccess(data: List<RadarEntity>) {
+                    viewModelScope.launch {
+                        _radars.emit(Result.Success(data))
+                    }
                 }
-            }
 
-        })
+                override fun onError(message: String) {
+                    viewModelScope.launch {
+                        _radars.emit(Result.Error(message))
+                    }
+                }
+            })
+        }
     }
 
-//    fun getRadars() = viewModelScope.launch {
-//        _radars.emit(getRadars.invoke())
-//    }
 
     fun deleteRadar(radar: RadarEntity) = viewModelScope.launch {
         _dialogActionStatusMessage.emit(deleteRadar.invoke(radar))

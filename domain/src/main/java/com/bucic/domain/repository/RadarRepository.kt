@@ -12,7 +12,7 @@ interface RadarRepository {
     suspend fun getRadarByUid(uid: String): Result<RadarEntity>
     suspend fun deleteRadar(radar: RadarEntity): Result<String>
     suspend fun updateRadar(radar: RadarEntity): Result<String>
-    suspend fun sync(): Boolean
+    suspend fun sync()
 
     suspend fun vote(radarReliabilityVote: RadarReliabilityVoteEntity): Result<String>
 }
