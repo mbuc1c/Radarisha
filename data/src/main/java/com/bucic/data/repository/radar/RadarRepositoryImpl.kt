@@ -60,7 +60,6 @@ class RadarRepositoryImpl(
             remote.updateRadar(radar)
         }
 
-    // TODO: continuation issue
     override suspend fun sync() {
         if (networkConnectivityChecker.isNetworkAvailable()) {
             remote.getAllRadars(object : RadarsCallback {
