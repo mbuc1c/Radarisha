@@ -73,19 +73,6 @@ class LoginFragment : Fragment() {
             }
         }
 
-        // TODO: remove
-        lifecycleScope.launch {
-            viewModel.currentUser.collectLatest { result ->
-                when (result) {
-                    is Result.Success -> {
-                        Toast.makeText(requireContext(), "Logged in as ${result.data.username}", Toast.LENGTH_SHORT).show()
-                        navigateToRadarActivity()
-                    }
-                    is Result.Error -> {}
-                    else -> {}
-                }
-            }
-        }
     }
 
     private fun navigateToRadarActivity() {

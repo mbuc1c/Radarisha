@@ -1,16 +1,18 @@
 package com.bucic.data.repository.radar
 
-import android.util.Log
 import com.bucic.data.exception.NoResultFoundException
 import com.bucic.data.mapper.toFSData
 import com.bucic.data.mapper.toRadarDomain
-import com.bucic.data.mapper.toRadarReliabilityVoteDomain
 import com.bucic.data.network.firestore.radar.RadarFireStore
 import com.bucic.data.util.NetworkConnectivityChecker
 import com.bucic.domain.entities.RadarEntity
 import com.bucic.domain.entities.RadarReliabilityVoteEntity
+import com.bucic.domain.util.RadarsCallback
 import com.bucic.domain.util.Result
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 
 class RadarRemoteDataSource(
     private val radarFireStore: RadarFireStore,
@@ -30,27 +32,8 @@ class RadarRemoteDataSource(
         }
     }
 
-    override suspend fun getAllRadars(): Result<List<RadarEntity>> {
-        return if (networkConnectivityChecker.isNetworkAvailable()) {
-            try {
-                val result = radarFireStore.getAllRadars()
-                val radarList = result.documents.map { radarDoc ->
-                    val radarData = radarDoc.toRadarDomain()
-                    val reliabilityVotesSnapshot =
-                        radarDoc.reference.collection("reliability").get().await()
-                    val reliabilityVotes = reliabilityVotesSnapshot.documents.map { voteDoc ->
-                        voteDoc.toRadarReliabilityVoteDomain()
-                    }
-                    radarData.copy(reliabilityVotes = reliabilityVotes)
-                }
-                Log.d("MyTag", "getAllRadars: $radarList")
-                Result.Success(radarList)
-            } catch (e: NoResultFoundException) {
-                Result.Error(e.message)
-            } catch (e: Exception) {
-                Result.Error(e.message.toString())
-            }
-        } else return Result.Error("Couldn't fetch new radars.\nNo internet connection.")
+    override fun getAllRadars(callback: RadarsCallback) {
+        radarFireStore.getRadarSnapshots(callback)
     }
 
     override suspend fun getRadarByUid(uid: String): Result<RadarEntity> {

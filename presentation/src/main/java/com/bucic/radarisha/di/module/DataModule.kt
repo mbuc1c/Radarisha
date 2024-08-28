@@ -20,6 +20,7 @@ import com.bucic.domain.usecases.radar.CreateRadarUseCase
 import com.bucic.domain.usecases.radar.DeleteRadarUseCase
 import com.bucic.domain.usecases.radar.GetRadarByUidUseCase
 import com.bucic.domain.usecases.radar.GetRadarsUseCase
+import com.bucic.domain.usecases.radar.SyncRadarsUseCase
 import com.bucic.domain.usecases.radar.UpdateRadarUseCase
 import com.bucic.domain.usecases.radar.VoteReliabilityUseCase
 import com.bucic.domain.usecases.user.CreateUserUseCase
@@ -95,9 +96,10 @@ object DataModule {
     @Singleton
     fun provideRadarRepositoryImpl(
         remote: RadarDataSource.Remote,
-        local: RadarDataSource.Local
+        local: RadarDataSource.Local,
+        networkConnectivityChecker: NetworkConnectivityChecker
     ): RadarRepository {
-        return RadarRepositoryImpl(remote, local)
+        return RadarRepositoryImpl(remote, local, networkConnectivityChecker)
     }
 
     @Provides
@@ -147,4 +149,10 @@ object DataModule {
     fun provideVoteReliabilityUseCase(radarRepository: RadarRepository): VoteReliabilityUseCase {
         return VoteReliabilityUseCase(radarRepository)
     }
+
+    @Provides
+    fun provideSyncRadarsUseCase(radarRepository: RadarRepository): SyncRadarsUseCase {
+        return SyncRadarsUseCase(radarRepository)
+    }
+
 }

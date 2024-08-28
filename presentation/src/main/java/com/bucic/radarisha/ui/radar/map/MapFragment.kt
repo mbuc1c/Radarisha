@@ -42,6 +42,7 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -97,7 +98,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
 
         displayVoteStatusMessage()
-        observeDialogActionCompletion()
+//        observeDialogActionCompletion()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -115,7 +116,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             getLastKnownLocation()
             true
         }
-        fetchRadars()
+//        fetchRadars()
         displayRadars()
 
         map.setOnMarkerClickListener { marker ->
@@ -132,7 +133,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private fun observeDialogActionCompletion() {
         startLifecycleScope {
             viewModel.dialogActionCompleted.collect {
-                fetchRadars()
+//                fetchRadars()
             }
         }
     }
@@ -222,9 +223,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         viewLifecycleOwner.lifecycleScope.launch { action() }
     }
 
-    private fun fetchRadars() {
-        viewModel.getRadars()
-    }
+//    private fun fetchRadars() {
+//        viewModel.getRadars()
+//    }
 
     private fun showDialog(marker: Marker) {
         val radarMarker = markerMap[marker]

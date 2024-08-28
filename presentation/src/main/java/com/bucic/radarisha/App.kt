@@ -25,8 +25,4 @@ class App : Application() {
             override fun onActivityDestroyed(activity: Activity) {}
         })
     }
-
-    override fun onTerminate() {
-        super.onTerminate()
-    }
 }
